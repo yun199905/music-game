@@ -1,0 +1,44 @@
+:host {
+  display: block;
+}
+
+.lyrics-stage {
+  position: relative;
+  overflow: hidden;
+}
+
+.lyrics-stage::after,
+.lyrics-stage::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 4rem;
+  z-index: 1;
+}
+
+.lyrics-stage::before {
+  top: 0;
+  background: linear-gradient(to bottom, rgba(2, 6, 23, 1), rgba(2, 6, 23, 0));
+}
+
+.lyrics-stage::after {
+  bottom: 0;
+  background: linear-gradient(to top, rgba(2, 6, 23, 1), rgba(2, 6, 23, 0));
+}
+
+.lyrics-flow {
+  animation: lyric-scroll var(--scroll-duration, 30s) linear forwards;
+  padding-bottom: 16rem;
+  transform: translateY(70%);
+}
+
+@keyframes lyric-scroll {
+  from {
+    transform: translateY(70%);
+  }
+
+  to {
+    transform: translateY(-78%);
+  }
+}

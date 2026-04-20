@@ -1,0 +1,247 @@
+<main class="min-h-screen bg-[radial-gradient(circle_at_top,_#fde68a,_#f8fafc_40%,_#dbeafe_100%)] px-4 py-6 text-slate-900">
+  <section class="mx-auto flex max-w-6xl flex-col gap-6 lg:grid lg:grid-cols-[1.1fr_0.9fr]">
+    <article class="rounded-[2rem] border border-white/60 bg-white/80 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.3em] text-amber-600">Music Game</p>
+          <h1 class="mt-2 text-3xl font-black leading-tight sm:text-5xl">
+            Multiplayer lyrics guessing for small rooms.
+          </h1>
+        </div>
+        <div
+          class="rounded-full border border-slate-200 bg-slate-950 px-4 py-2 text-right text-xs text-white"
+          *ngIf="room() as activeRoom"
+        >
+          <div class="uppercase tracking-[0.3em] text-slate-400">Room</div>
+          <div class="mt-1 text-lg font-bold">{{ activeRoom.code }}</div>
+        </div>
+      </div>
+
+      <p class="mt-4 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
+        Mobile-first party room with live score sync, scrolling lyrics, hidden song titles, and host-controlled rounds.
+      </p>
+
+      <div class="mt-6 grid gap-3 sm:grid-cols-2" *ngIf="!room()">
+        <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
+          <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Nickname</span>
+          <input
+            class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
+            [ngModel]="nickname()"
+            (ngModelChange)="updateField('nickname', $event)"
+            maxlength="20"
+            placeholder="DJ Cat"
+          />
+        </label>
+
+        <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
+          <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Room Code</span>
+          <input
+            class="mt-2 w-full bg-transparent text-lg font-semibold uppercase outline-none"
+            [ngModel]="joinCode()"
+            (ngModelChange)="updateField('joinCode', $event)"
+            maxlength="5"
+            placeholder="AB12C"
+          />
+        </label>
+      </div>
+
+      <div class="mt-6 grid gap-3 sm:grid-cols-2" *ngIf="!room()">
+        <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
+          <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Rounds</span>
+          <input
+            class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
+            type="number"
+            min="1"
+            max="10"
+            [ngModel]="totalRounds()"
+            (ngModelChange)="totalRounds.set(+$event || 5)"
+          />
+        </label>
+
+        <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
+          <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Seconds / Round</span>
+          <input
+            class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
+            type="number"
+            min="15"
+            max="45"
+            [ngModel]="roundDurationSeconds()"
+            (ngModelChange)="roundDurationSeconds.set(+$event || 30)"
+          />
+        </label>
+      </div>
+
+      <div class="mt-6 flex flex-col gap-3 sm:flex-row" *ngIf="!room()">
+        <button
+          class="rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
+          (click)="createRoom()"
+        >
+          Create Room
+        </button>
+        <button
+          class="rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-950"
+          (click)="joinRoom()"
+        >
+          Join Room
+        </button>
+      </div>
+
+      <div class="mt-6 flex flex-col gap-3" *ngIf="room() as activeRoom">
+        <div class="flex flex-wrap items-center gap-3 rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Status</p>
+            <p class="mt-1 text-xl font-black capitalize">{{ activeRoom.status.replace('_', ' ') }}</p>
+          </div>
+          <div class="ml-auto text-right">
+            <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Countdown</p>
+            <p class="mt-1 text-4xl font-black text-rose-600">{{ countdown() }}</p>
+          </div>
+        </div>
+
+        <div
+          class="lyrics-stage rounded-[2rem] border border-slate-200 bg-slate-950 p-5 text-white"
+          [class.is-active]="activeRoom.phase === 'guessing'"
+        >
+          <div class="flex items-center justify-between text-xs uppercase tracking-[0.25em] text-slate-400">
+            <span>Round {{ activeRoom.currentRoundIndex }} / {{ activeRoom.totalRounds }}</span>
+            <span>{{ activeRoom.phase }}</span>
+          </div>
+
+          <div class="mt-4 h-[18rem] overflow-hidden sm:h-[24rem]">
+            <div
+              class="lyrics-flow"
+              [style.--scroll-duration]="lyricDuration()"
+              [style.animation-play-state]="activeRoom.phase === 'guessing' ? 'running' : 'paused'"
+            >
+              <p *ngFor="let line of lyricLines()" class="py-2 text-xl font-semibold leading-relaxed sm:text-2xl">
+                {{ line }}
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-4 rounded-3xl bg-white/10 p-4 text-sm leading-6 text-slate-200" *ngIf="!currentRound()">
+            Waiting for the host to start the first round.
+          </div>
+
+          <div
+            class="mt-4 rounded-3xl bg-emerald-400/15 p-4 text-sm leading-6 text-emerald-100"
+            *ngIf="currentRound()?.phase === 'revealed'"
+          >
+            Answer: {{ currentRound()?.revealTitle }} · {{ currentRound()?.revealArtist }}
+          </div>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-[1fr_auto]">
+          <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
+            <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Your Guess</span>
+            <input
+              class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
+              [disabled]="activeRoom.phase !== 'guessing' || hasSubmittedCorrectAnswer()"
+              [ngModel]="answer()"
+              (ngModelChange)="updateField('answer', $event)"
+              (keyup.enter)="submitGuess()"
+              placeholder="Song title"
+            />
+          </label>
+
+          <button
+            class="rounded-full bg-amber-400 px-6 py-3 text-sm font-black text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:bg-slate-200"
+            [disabled]="activeRoom.phase !== 'guessing' || hasSubmittedCorrectAnswer()"
+            (click)="submitGuess()"
+          >
+            Submit
+          </button>
+        </div>
+
+        <div class="flex flex-wrap gap-3">
+          <button
+            class="rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+            [disabled]="!canStart() || activeRoom.status !== 'lobby'"
+            (click)="startGame()"
+          >
+            Start Game
+          </button>
+
+          <button
+            class="rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-900 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+            [disabled]="!isHost() || activeRoom.phase !== 'revealed' || activeRoom.status === 'finished'"
+            (click)="nextRound()"
+          >
+            Next Round
+          </button>
+
+          <button
+            class="rounded-full border border-rose-200 bg-rose-50 px-6 py-3 text-sm font-bold text-rose-700"
+            (click)="leaveRoom()"
+          >
+            Leave Room
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-6 rounded-3xl border border-slate-200 bg-slate-50/70 p-4 text-sm text-slate-600">
+        {{ notice() }}
+      </div>
+
+      <div class="mt-4 rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700" *ngIf="errorMessage()">
+        {{ errorMessage() }}
+      </div>
+    </article>
+
+    <aside class="space-y-6">
+      <section class="rounded-[2rem] border border-slate-200 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Leaderboard</p>
+            <h2 class="mt-2 text-2xl font-black">Live room ranking</h2>
+          </div>
+          <div class="rounded-full bg-slate-950 px-3 py-2 text-xs font-bold text-white" *ngIf="currentPlayer() as me">
+            You: {{ me.score }}
+          </div>
+        </div>
+
+        <div class="mt-4 space-y-3" *ngIf="leaderboard().length; else emptyBoard">
+          <div
+            *ngFor="let player of leaderboard(); trackBy: trackPlayer"
+            class="flex items-center gap-3 rounded-3xl border border-slate-100 bg-slate-50 p-4"
+          >
+            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-300 text-lg font-black text-slate-950">
+              {{ player.nickname.slice(0, 1).toUpperCase() }}
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="truncate text-base font-black text-slate-900">
+                {{ player.nickname }}
+                <span class="ml-2 rounded-full bg-slate-900 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-white" *ngIf="player.isHost">
+                  Host
+                </span>
+              </div>
+              <div class="text-xs uppercase tracking-[0.25em]" [class.text-emerald-600]="player.connected" [class.text-slate-400]="!player.connected">
+                {{ player.connected ? 'Online' : 'Offline' }}
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-xs uppercase tracking-[0.25em] text-slate-400">Score</div>
+              <div class="text-2xl font-black text-slate-950">{{ player.score }}</div>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #emptyBoard>
+          <p class="mt-4 text-sm text-slate-500">Players will appear here after joining a room.</p>
+        </ng-template>
+      </section>
+
+      <section class="rounded-[2rem] border border-slate-200 bg-slate-950 p-5 text-white shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
+        <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">Round insight</p>
+        <h2 class="mt-2 text-2xl font-black">What is happening now</h2>
+
+        <div class="mt-4 space-y-3 text-sm text-slate-300">
+          <p>Mode: Host controls start and next round. New players can only join before the game starts.</p>
+          <p>Scoring: 100 base points plus remaining seconds when your answer is accepted.</p>
+          <p *ngIf="winner() as roundWinner">First correct answer this round: {{ roundWinner.nickname }}</p>
+          <p *ngIf="!winner()">No correct answer has been locked for this round yet.</p>
+        </div>
+      </section>
+    </aside>
+  </section>
+</main>
