@@ -20,6 +20,7 @@ import { PlayerSnapshot, RoomSnapshot, RoundSnapshot } from './core/game.models'
   styleUrl: './app.scss',
 })
 export class App {
+  private readonly sessionStorageKey = 'music-game-session';
   private readonly api = inject(GameApiService);
   private readonly socket = inject(GameSocketService);
   private readonly destroyRef = inject(DestroyRef);
@@ -66,6 +67,7 @@ export class App {
     this.socket.onRoomState((room) => {
       this.room.set(room);
       this.syncCountdown(room.currentRound);
+      this.persistSession();
       if (room.phase === 'revealed') {
         this.hasSubmittedCorrectAnswer.set(false);
       }
@@ -89,12 +91,28 @@ export class App {
 
     this.socket.onGameEnded((room) => {
       this.room.set(room);
+      this.persistSession();
       this.notice.set('Game finished. Final scores are locked.');
+    });
+
+    this.socket.onDisconnect(() => {
+      if (this.room()) {
+        this.notice.set('Connection dropped. Trying to reconnect to the room.');
+      }
+    });
+
+    this.socket.onReconnect((room) => {
+      this.room.set(room);
+      this.syncCountdown(room.currentRound);
+      this.persistSession();
+      this.notice.set(`Reconnected to room ${room.code}.`);
     });
 
     interval(1000)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.tickCountdown());
+
+    void this.restoreSession();
   }
 
   protected updateField(
@@ -127,7 +145,7 @@ export class App {
         totalRounds: this.totalRounds(),
         roundDurationSeconds: this.roundDurationSeconds(),
       });
-      this.applySession(session);
+      await this.applySession(session);
       this.notice.set('Room created. Share the code and wait for players.');
     } catch (error) {
       this.errorMessage.set((error as Error).message);
@@ -143,34 +161,44 @@ export class App {
     try {
       this.errorMessage.set('');
       const session = await this.api.joinRoom(this.joinCode().trim(), this.nickname().trim());
-      this.applySession(session);
+      await this.applySession(session);
       this.notice.set('Joined room. Waiting for the host to start.');
     } catch (error) {
       this.errorMessage.set((error as Error).message);
     }
   }
 
-  protected startGame() {
+  protected async startGame() {
     const room = this.room();
     const playerId = this.playerId();
     if (!room || !playerId) {
       return;
     }
 
-    this.socket.emitStartGame(room.code, playerId);
+    try {
+      this.errorMessage.set('');
+      await this.socket.emitStartGame(room.code, playerId);
+    } catch (error) {
+      this.errorMessage.set((error as Error).message);
+    }
   }
 
-  protected nextRound() {
+  protected async nextRound() {
     const room = this.room();
     const playerId = this.playerId();
     if (!room || !playerId) {
       return;
     }
 
-    this.socket.emitNextRound(room.code, playerId);
+    try {
+      this.errorMessage.set('');
+      await this.socket.emitNextRound(room.code, playerId);
+    } catch (error) {
+      this.errorMessage.set((error as Error).message);
+    }
   }
 
-  protected submitGuess() {
+  protected async submitGuess() {
     const room = this.room();
     const playerId = this.playerId();
     const guess = this.answer().trim();
@@ -178,9 +206,17 @@ export class App {
       return;
     }
 
-    this.socket.emitGuess(room.code, playerId, guess);
-    this.answer.set('');
-    this.hasSubmittedCorrectAnswer.set(true);
+    try {
+      this.errorMessage.set('');
+      const result = await this.socket.emitGuess(room.code, playerId, guess);
+      this.answer.set('');
+      this.hasSubmittedCorrectAnswer.set(result.correct);
+      if (!result.correct) {
+        this.notice.set('Not accepted. Keep guessing before the timer ends.');
+      }
+    } catch (error) {
+      this.errorMessage.set((error as Error).message);
+    }
   }
 
   protected leaveRoom() {
@@ -189,21 +225,53 @@ export class App {
     this.playerId.set(null);
     this.answer.set('');
     this.joinCode.set('');
+    this.nickname.set('');
     this.notice.set('Disconnected from room.');
     this.countdown.set(0);
     this.hasSubmittedCorrectAnswer.set(false);
+    this.clearSession();
   }
 
   protected trackPlayer(index: number, player: PlayerSnapshot) {
     return `${index}-${player.id}`;
   }
 
-  private applySession(session: { playerId: string; room: RoomSnapshot }) {
+  private async applySession(session: { playerId: string; room: RoomSnapshot }) {
     this.playerId.set(session.playerId);
     this.room.set(session.room);
+    this.nickname.set(
+      session.room.players.find((player) => player.id === session.playerId)?.nickname ?? this.nickname(),
+    );
     this.joinCode.set(session.room.code);
-    this.socket.connect(session.room.code, session.playerId);
+    const room = await this.socket.connect(session.room.code, session.playerId);
+    this.room.set(room);
+    this.persistSession();
     this.syncCountdown(session.room.currentRound);
+  }
+
+  private async restoreSession() {
+    const session = this.readSession();
+    if (!session) {
+      return;
+    }
+
+    try {
+      this.nickname.set(session.nickname);
+      this.joinCode.set(session.roomCode);
+      this.playerId.set(session.playerId);
+
+      const room = await this.api.getRoom(session.roomCode);
+      this.room.set(room);
+      const connectedRoom = await this.socket.connect(session.roomCode, session.playerId);
+      this.room.set(connectedRoom);
+      this.notice.set(`Rejoined room ${session.roomCode}.`);
+      this.syncCountdown(connectedRoom.currentRound);
+    } catch {
+      this.clearSession();
+      this.room.set(null);
+      this.playerId.set(null);
+      this.notice.set('Saved session is no longer valid. Create or join a room again.');
+    }
   }
 
   private syncCountdown(round?: RoundSnapshot) {
@@ -227,5 +295,48 @@ export class App {
     this.countdown.set(
       Math.max(0, Math.ceil((new Date(round.endsAt).getTime() - Date.now()) / 1000)),
     );
+  }
+
+  private persistSession() {
+    const room = this.room();
+    const playerId = this.playerId();
+    if (!room || !playerId) {
+      return;
+    }
+
+    localStorage.setItem(
+      this.sessionStorageKey,
+      JSON.stringify({
+        roomCode: room.code,
+        playerId,
+        nickname: this.nickname(),
+      }),
+    );
+  }
+
+  private readSession(): { roomCode: string; playerId: string; nickname: string } | null {
+    const raw = localStorage.getItem(this.sessionStorageKey);
+    if (!raw) {
+      return null;
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as { roomCode?: string; playerId?: string; nickname?: string };
+      if (!parsed.roomCode || !parsed.playerId || !parsed.nickname) {
+        return null;
+      }
+
+      return {
+        roomCode: parsed.roomCode,
+        playerId: parsed.playerId,
+        nickname: parsed.nickname,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  private clearSession() {
+    localStorage.removeItem(this.sessionStorageKey);
   }
 }

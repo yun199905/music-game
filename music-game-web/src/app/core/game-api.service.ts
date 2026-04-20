@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { appConfigValues } from './app-config';
-import { RoomSessionResponse } from './game.models';
+import { RoomSessionResponse, RoomSnapshot } from './game.models';
 
 @Injectable({ providedIn: 'root' })
 export class GameApiService {
@@ -18,6 +18,10 @@ export class GameApiService {
     return this.post<RoomSessionResponse>(`/rooms/${roomCode}/join`, { nickname });
   }
 
+  async getRoom(roomCode: string): Promise<RoomSnapshot> {
+    return this.get<RoomSnapshot>(`/rooms/${roomCode}`);
+  }
+
   private async post<T>(path: string, payload: unknown): Promise<T> {
     const response = await fetch(`${this.baseUrl}${path}`, {
       method: 'POST',
@@ -26,6 +30,17 @@ export class GameApiService {
       },
       body: JSON.stringify(payload),
     });
+
+    if (!response.ok) {
+      const errorBody = (await response.json().catch(() => null)) as { message?: string } | null;
+      throw new Error(errorBody?.message ?? 'Request failed');
+    }
+
+    return (await response.json()) as T;
+  }
+
+  private async get<T>(path: string): Promise<T> {
+    const response = await fetch(`${this.baseUrl}${path}`);
 
     if (!response.ok) {
       const errorBody = (await response.json().catch(() => null)) as { message?: string } | null;
