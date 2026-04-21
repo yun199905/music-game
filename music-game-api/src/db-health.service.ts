@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
 
@@ -6,6 +6,7 @@ import { DataSource } from 'typeorm';
 export class DbHealthService {
   constructor(
     private readonly configService: ConfigService,
+    @Optional()
     private readonly dataSource: DataSource,
   ) {}
 
@@ -16,6 +17,14 @@ export class DbHealthService {
         enabled: false,
         connected: false,
         reason: 'DATABASE_URL is not configured',
+      };
+    }
+
+    if (!this.dataSource) {
+      return {
+        enabled: true,
+        connected: false,
+        reason: 'DataSource is not available',
       };
     }
 

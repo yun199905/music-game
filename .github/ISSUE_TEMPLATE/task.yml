@@ -1,0 +1,83 @@
+name: Task
+description: Track bounded engineering work that is not a net-new feature.
+title: "[Task] "
+labels:
+  - status:triage
+  - type:task
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for maintenance, refactors, testing work, docs work, or operational tasks.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the system is primarily affected?
+      options:
+        - area:web
+        - area:api
+        - area:infra
+        - area:repo
+    validations:
+      required: true
+  - type: dropdown
+    id: task_type
+    attributes:
+      label: Task Type
+      description: Choose the best classification.
+      options:
+        - type:task
+        - type:docs
+        - type:refactor
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: Choose the expected urgency.
+      options:
+        - priority:critical
+        - priority:high
+        - priority:normal
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Describe the task in one short paragraph.
+      placeholder: Add stable CI-friendly frontend test commands and update the README.
+    validations:
+      required: true
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Rationale
+      description: Why does this work matter now?
+      placeholder: The current workflow is inconsistent and creates avoidable verification mistakes.
+    validations:
+      required: true
+  - type: textarea
+    id: deliverables
+    attributes:
+      label: Deliverables
+      description: List the expected outputs of this task.
+      placeholder: |
+        - New package script
+        - README update
+        - Validation notes
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Define the conditions that make this issue done.
+      placeholder: |
+        - CI-safe test command is documented
+        - Command succeeds locally
+        - Related docs are updated
+    validations:
+      required: true

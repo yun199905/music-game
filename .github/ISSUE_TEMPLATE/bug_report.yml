@@ -1,0 +1,88 @@
+name: Bug Report
+description: Report broken behavior that needs investigation or a fix.
+title: "[Bug] "
+labels:
+  - status:triage
+  - type:bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for defects that are reproducible or clearly observable.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the system is affected?
+      options:
+        - area:web
+        - area:api
+        - area:infra
+        - area:repo
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: Choose the delivery impact of this issue.
+      options:
+        - priority:critical
+        - priority:high
+        - priority:normal
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Describe the failure in one short paragraph.
+      placeholder: The frontend build crashes on macOS during the Angular build step.
+    validations:
+      required: true
+  - type: textarea
+    id: current_behavior
+    attributes:
+      label: Current Behavior
+      description: What happens today?
+      placeholder: Include actual results, errors, and user-visible impact.
+    validations:
+      required: true
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected Behavior
+      description: What should happen instead?
+      placeholder: The build should complete and output a production bundle.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps To Reproduce
+      description: Provide deterministic reproduction steps.
+      placeholder: |
+        1. cd music-game-web
+        2. npm run build
+        3. Observe Abort trap: 6
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Relevant logs, screenshots, file references, or commands.
+      placeholder: Paste error output or link to related files and lines.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Define the conditions that make this issue done.
+      placeholder: |
+        - `npm run build` succeeds locally
+        - Root cause is documented
+        - Regression coverage or documentation is added
+    validations:
+      required: true

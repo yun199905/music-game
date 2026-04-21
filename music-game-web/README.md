@@ -41,4 +41,5 @@ window.APP_CONFIG = {
 
 - Tailwind is enabled through PostCSS.
 - The app expects the NestJS API to expose both REST and Socket.IO on the same origin.
-- In this environment, `ng build` currently aborts during the Angular build step with `Abort trap: 6`; TypeScript compilation itself passes with `npx tsc -p tsconfig.app.json --noEmit`.
+- In this environment, the Angular 21 `application` builder path can abort during `ng build`. The repository build script uses `ng run music-game-web:bundle`, which targets the stable browser builder and outputs to `dist/music-game-web/browser`.
+- Production font inlining is disabled for the stable build target so offline/local builds do not fail when Google Fonts cannot be fetched.

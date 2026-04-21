@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Codex workflow guidance
+    url: https://github.com/yun199905/music-game/blob/main/docs/github-ops.md
+    about: Review the repository's issue and PR operating model before filing work.

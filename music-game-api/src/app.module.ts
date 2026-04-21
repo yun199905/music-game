@@ -12,45 +12,42 @@ import { GuessEntity } from './game/entities/guess.entity';
 import { LyricsCacheEntity } from './game/entities/lyrics-cache.entity';
 import { SongEntity } from './game/entities/song.entity';
 
+const databaseEnabled = Boolean(process.env.DATABASE_URL);
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env.local', '.env'],
     }),
-    TypeOrmModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        const databaseUrl = configService.get<string>('DATABASE_URL');
-        const sslEnabled = configService.get<string>('DB_SSL') === 'true';
+    ...(databaseEnabled
+      ? [
+          TypeOrmModule.forRootAsync({
+            inject: [ConfigService],
+            useFactory: (configService: ConfigService) => {
+              const databaseUrl = configService.get<string>('DATABASE_URL');
+              const sslEnabled = configService.get<string>('DB_SSL') === 'true';
 
-        if (!databaseUrl) {
-          return {
-            type: 'postgres' as const,
-            autoLoadEntities: true,
-            synchronize: false,
-            entities: [],
-          };
-        }
-
-        return {
-          type: 'postgres' as const,
-          url: databaseUrl,
-          autoLoadEntities: true,
-          synchronize: true,
-          ssl: sslEnabled ? { rejectUnauthorized: false } : false,
-          connectTimeoutMS: 10000,
-          entities: [
-            SongEntity,
-            LyricsCacheEntity,
-            GameRoomEntity,
-            GamePlayerEntity,
-            GameRoundEntity,
-            GuessEntity,
-          ],
-        };
-      },
-    }),
+              return {
+                type: 'postgres' as const,
+                url: databaseUrl,
+                autoLoadEntities: true,
+                synchronize: true,
+                ssl: sslEnabled ? { rejectUnauthorized: false } : false,
+                connectTimeoutMS: 10000,
+                entities: [
+                  SongEntity,
+                  LyricsCacheEntity,
+                  GameRoomEntity,
+                  GamePlayerEntity,
+                  GameRoundEntity,
+                  GuessEntity,
+                ],
+              };
+            },
+          }),
+        ]
+      : []),
     GameModule,
   ],
   controllers: [AppController],
