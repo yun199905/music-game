@@ -6,6 +6,13 @@
 - Stack: NestJS 11, TypeORM, PostgreSQL, Socket.IO, Swagger
 - Purpose: backend for rooms, gameplay sync, lyrics masking, and persistence
 
+## Repo Governance Link
+
+- Root workflow rules live in `/AGENTS.md`.
+- GitHub issue, PR, and merge flow lives in `/docs/github-ops.md` and `/docs/git-flow.md`.
+- Codex CLI automation rules live in `/docs/codex-workflows.md`.
+- Documentation and governance file changes should pass `npm run check:docs` from the repo root before commit.
+
 ## Runbook
 
 - Install: `npm install`

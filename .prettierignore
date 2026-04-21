@@ -1,0 +1,11 @@
+node_modules
+dist
+coverage
+music-game-api/node_modules
+music-game-api/dist
+music-game-api/coverage
+music-game-web/node_modules
+music-game-web/dist
+music-game-web/coverage
+music-game-web/.angular
+*.log
