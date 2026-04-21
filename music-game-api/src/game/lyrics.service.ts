@@ -3,6 +3,7 @@ import axios from 'axios';
 import { SongEntity } from './entities/song.entity';
 import { MaskingService } from './masking.service';
 import { PersistenceService } from './persistence.service';
+import { getSeedSongFallbackLyrics } from './song-catalog';
 
 type LyricsPayload = {
   provider: string;
@@ -27,6 +28,11 @@ export class LyricsService {
       };
     }
 
+    const localFallback = getSeedSongFallbackLyrics(song.artist, song.title);
+    if (localFallback) {
+      return this.buildAndCacheLyrics(song, localFallback, 'seed-local');
+    }
+
     const provider = process.env.LYRICS_PROVIDER ?? 'lyrics.ovh';
     const baseUrl = process.env.LYRICS_API_BASE_URL ?? 'https://api.lyrics.ovh/v1';
     const { data } = await axios.get<{ lyrics?: string }>(
@@ -39,6 +45,14 @@ export class LyricsService {
       throw new Error(`Lyrics not found for ${song.artist} - ${song.title}`);
     }
 
+    return this.buildAndCacheLyrics(song, rawLyrics, provider);
+  }
+
+  private async buildAndCacheLyrics(
+    song: SongEntity,
+    rawLyrics: string,
+    provider: string,
+  ): Promise<LyricsPayload> {
     const maskedLyrics = this.maskingService.maskLyrics(rawLyrics, song.title, song.aliases ?? []);
     if (!maskedLyrics.trim() || maskedLyrics === rawLyrics) {
       throw new Error(`Masked lyrics invalid for ${song.artist} - ${song.title}`);
