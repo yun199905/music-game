@@ -16,6 +16,8 @@ type GuessAck = {
 
 @Injectable({ providedIn: 'root' })
 export class GameSocketService {
+  private readonly defaultAckTimeoutMs = 5000;
+  private readonly roomActionAckTimeoutMs = 20000;
   private socket?: Socket;
   private roomListener?: RoomListener;
   private roundStartedListener?: RoundListener;
@@ -59,11 +61,19 @@ export class GameSocketService {
   }
 
   emitStartGame(roomCode: string, playerId: string) {
-    return this.emitWithAck<RoomSnapshot>('start_game', { roomCode, playerId });
+    return this.emitWithAck<RoomSnapshot>(
+      'start_game',
+      { roomCode, playerId },
+      this.roomActionAckTimeoutMs,
+    );
   }
 
   emitNextRound(roomCode: string, playerId: string) {
-    return this.emitWithAck<RoomSnapshot>('next_round', { roomCode, playerId });
+    return this.emitWithAck<RoomSnapshot>(
+      'next_round',
+      { roomCode, playerId },
+      this.roomActionAckTimeoutMs,
+    );
   }
 
   emitGuess(roomCode: string, playerId: string, guess: string) {
@@ -71,6 +81,8 @@ export class GameSocketService {
   }
 
   disconnect() {
+    this.activeSession = undefined;
+    this.reconnecting = false;
     this.socket?.disconnect();
     this.socket = undefined;
   }
@@ -128,11 +140,11 @@ export class GameSocketService {
     });
   }
 
-  private async emitWithAck<T>(event: string, payload: unknown): Promise<T> {
+  private async emitWithAck<T>(event: string, payload: unknown, timeoutMs = this.defaultAckTimeoutMs): Promise<T> {
     const socket = await this.ensureConnected();
 
     try {
-      return (await socket.timeout(5000).emitWithAck(event, payload)) as T;
+      return (await socket.timeout(timeoutMs).emitWithAck(event, payload)) as T;
     } catch (error) {
       throw this.normalizeError(error);
     }

@@ -1,0 +1,77 @@
+name: Feature Request
+description: Propose a new capability or user-facing improvement.
+title: "[Feature] "
+labels:
+  - status:triage
+  - type:feature
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for net-new capabilities or meaningful product improvements.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the system will this change affect most?
+      options:
+        - area:web
+        - area:api
+        - area:infra
+        - area:repo
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: Choose the expected delivery urgency.
+      options:
+        - priority:critical
+        - priority:high
+        - priority:normal
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: State the feature in one paragraph.
+      placeholder: Add a host-side song management screen for maintaining the playable catalog.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / Opportunity
+      description: What problem does this solve, or what value does it add?
+      placeholder: The current song list is code-seeded and cannot be managed without code changes.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Proposed Scope
+      description: Describe what is in scope for this feature.
+      placeholder: Include the intended behavior, data flow, and primary UX or API outcome.
+    validations:
+      required: true
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of Scope
+      description: Explicitly name what this feature does not include.
+      placeholder: No authentication, no bulk import, no mobile redesign.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Define the conditions that make this issue done.
+      placeholder: |
+        - Host can create a song entry from the UI
+        - API validates required song fields
+        - The new flow is covered by tests
+    validations:
+      required: true

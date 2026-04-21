@@ -1,0 +1,9 @@
+model = "gpt-5.4"
+model_reasoning_effort = "medium"
+
+[mcp_servers.github]
+command = "bash"
+args = [
+  "-lc",
+  "source ~/.bashrc >/dev/null 2>&1; export GITHUB_PERSONAL_ACCESS_TOKEN=\"$GITHUB_PAT\"; exec docker run -i --rm -e GITHUB_PERSONAL_ACCESS_TOKEN -e GITHUB_TOOLSETS=issues,repos,pull_requests,users,context ghcr.io/github/github-mcp-server",
+]

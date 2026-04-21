@@ -111,14 +111,14 @@ export class PersistenceService {
       return;
     }
 
-    await this.roomRepository.save({
+    await this.roomRepository.upsert({
       roomCode: room.code,
       hostPlayerId: room.hostPlayerId,
       status: room.status,
       currentRoundIndex: room.currentRoundIndex,
       totalRounds: room.totalRounds,
       roundDurationSeconds: room.roundDurationSeconds,
-    });
+    }, ['roomCode']);
 
     await this.playerRepository.delete({ roomCode: room.code });
     await this.playerRepository.save(
