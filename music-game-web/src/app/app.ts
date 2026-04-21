@@ -1,11 +1,5 @@
 import { CommonModule } from '@angular/common';
-import {
-  Component,
-  DestroyRef,
-  computed,
-  inject,
-  signal,
-} from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { interval } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -59,8 +53,8 @@ export class App {
       .filter(Boolean),
   );
   protected readonly lyricDuration = computed(() => `${this.room()?.roundDurationSeconds ?? 30}s`);
-  protected readonly currentPlayer = computed(() =>
-    this.leaderboard().find((player) => player.id === this.playerId()) ?? null,
+  protected readonly currentPlayer = computed(
+    () => this.leaderboard().find((player) => player.id === this.playerId()) ?? null,
   );
 
   constructor() {
@@ -115,10 +109,7 @@ export class App {
     void this.restoreSession();
   }
 
-  protected updateField(
-    field: 'nickname' | 'joinCode' | 'answer',
-    value: string,
-  ) {
+  protected updateField(field: 'nickname' | 'joinCode' | 'answer', value: string) {
     if (field === 'nickname') {
       this.nickname.set(value);
       return;
@@ -240,7 +231,8 @@ export class App {
     this.playerId.set(session.playerId);
     this.room.set(session.room);
     this.nickname.set(
-      session.room.players.find((player) => player.id === session.playerId)?.nickname ?? this.nickname(),
+      session.room.players.find((player) => player.id === session.playerId)?.nickname ??
+        this.nickname(),
     );
     this.joinCode.set(session.room.code);
     const room = await this.socket.connect(session.room.code, session.playerId);

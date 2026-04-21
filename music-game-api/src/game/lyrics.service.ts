@@ -34,7 +34,8 @@ export class LyricsService {
     }
 
     const provider = process.env.LYRICS_PROVIDER ?? 'lyrics.ovh';
-    const baseUrl = process.env.LYRICS_API_BASE_URL ?? 'https://api.lyrics.ovh/v1';
+    const baseUrl =
+      process.env.LYRICS_API_BASE_URL ?? 'https://api.lyrics.ovh/v1';
     const { data } = await axios.get<{ lyrics?: string }>(
       `${baseUrl}/${encodeURIComponent(song.artist)}/${encodeURIComponent(song.title)}`,
       { timeout: 6000 },
@@ -53,9 +54,15 @@ export class LyricsService {
     rawLyrics: string,
     provider: string,
   ): Promise<LyricsPayload> {
-    const maskedLyrics = this.maskingService.maskLyrics(rawLyrics, song.title, song.aliases ?? []);
+    const maskedLyrics = this.maskingService.maskLyrics(
+      rawLyrics,
+      song.title,
+      song.aliases ?? [],
+    );
     if (!maskedLyrics.trim() || maskedLyrics === rawLyrics) {
-      throw new Error(`Masked lyrics invalid for ${song.artist} - ${song.title}`);
+      throw new Error(
+        `Masked lyrics invalid for ${song.artist} - ${song.title}`,
+      );
     }
 
     await this.persistenceService.saveLyricsCache({

@@ -1,4 +1,4 @@
-import { Inject, Injectable, Optional } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateSongDto } from './dto/create-song.dto';
@@ -56,7 +56,9 @@ export class PersistenceService {
       return;
     }
 
-    await this.songRepository.save(seedSongs.map((seed) => this.mapSeedToEntity(seed)));
+    await this.songRepository.save(
+      seedSongs.map((seed) => this.mapSeedToEntity(seed)),
+    );
   }
 
   async getSongs(): Promise<SongEntity[]> {
@@ -90,13 +92,17 @@ export class PersistenceService {
 
   async saveLyricsCache(cache: Omit<LyricsCacheEntity, 'id'>): Promise<void> {
     if (this.lyricsCacheRepository) {
-      const existing = await this.lyricsCacheRepository.findOne({ where: { songId: cache.songId } });
+      const existing = await this.lyricsCacheRepository.findOne({
+        where: { songId: cache.songId },
+      });
       if (existing) {
         await this.lyricsCacheRepository.save({ ...existing, ...cache });
         return;
       }
 
-      await this.lyricsCacheRepository.save(this.lyricsCacheRepository.create(cache));
+      await this.lyricsCacheRepository.save(
+        this.lyricsCacheRepository.create(cache),
+      );
       return;
     }
 
@@ -111,14 +117,17 @@ export class PersistenceService {
       return;
     }
 
-    await this.roomRepository.upsert({
-      roomCode: room.code,
-      hostPlayerId: room.hostPlayerId,
-      status: room.status,
-      currentRoundIndex: room.currentRoundIndex,
-      totalRounds: room.totalRounds,
-      roundDurationSeconds: room.roundDurationSeconds,
-    }, ['roomCode']);
+    await this.roomRepository.upsert(
+      {
+        roomCode: room.code,
+        hostPlayerId: room.hostPlayerId,
+        status: room.status,
+        currentRoundIndex: room.currentRoundIndex,
+        totalRounds: room.totalRounds,
+        roundDurationSeconds: room.roundDurationSeconds,
+      },
+      ['roomCode'],
+    );
 
     await this.playerRepository.delete({ roomCode: room.code });
     await this.playerRepository.save(

@@ -97,7 +97,12 @@ Firework leaves the whole match wanting more.
   },
 ];
 
-export function getSeedSongFallbackLyrics(artist: string, title: string): string | null {
-  const match = seedSongs.find((song) => song.artist === artist && song.title === title);
+export function getSeedSongFallbackLyrics(
+  artist: string,
+  title: string,
+): string | null {
+  const match = seedSongs.find(
+    (song) => song.artist === artist && song.title === title,
+  );
   return match?.fallbackLyrics ?? null;
 }

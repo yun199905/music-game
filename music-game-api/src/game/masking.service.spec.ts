@@ -4,7 +4,9 @@ describe('MaskingService', () => {
   const service = new MaskingService();
 
   it('normalizes punctuation and spaces when building answer sets', () => {
-    const answers = service.buildAnswerSet('Blinding Lights', ['Blinding-Lights']);
+    const answers = service.buildAnswerSet('Blinding Lights', [
+      'Blinding-Lights',
+    ]);
     expect(answers).toContain('blindinglights');
   });
 

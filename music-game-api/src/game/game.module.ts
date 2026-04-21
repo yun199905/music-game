@@ -32,6 +32,12 @@ const databaseEnabled = Boolean(process.env.DATABASE_URL);
       : []),
   ],
   controllers: [GameController],
-  providers: [GameService, GameGateway, LyricsService, MaskingService, PersistenceService],
+  providers: [
+    GameService,
+    GameGateway,
+    LyricsService,
+    MaskingService,
+    PersistenceService,
+  ],
 })
 export class GameModule {}

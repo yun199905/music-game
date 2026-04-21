@@ -140,7 +140,11 @@ export class GameSocketService {
     });
   }
 
-  private async emitWithAck<T>(event: string, payload: unknown, timeoutMs = this.defaultAckTimeoutMs): Promise<T> {
+  private async emitWithAck<T>(
+    event: string,
+    payload: unknown,
+    timeoutMs = this.defaultAckTimeoutMs,
+  ): Promise<T> {
     const socket = await this.ensureConnected();
 
     try {
