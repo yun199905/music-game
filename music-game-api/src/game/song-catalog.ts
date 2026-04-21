@@ -3,50 +3,101 @@ export type SeedSong = {
   artist: string;
   language: 'zh-TW' | 'zh-CN' | 'en';
   aliases?: string[];
+  fallbackLyrics?: string;
 };
 
 export const seedSongs: SeedSong[] = [
   {
-    title: '小幸運',
-    artist: '田馥甄',
-    language: 'zh-TW',
-    aliases: ['我的少女時代 小幸運'],
+    title: 'Shape of You',
+    artist: 'Ed Sheeran',
+    language: 'en',
+    fallbackLyrics: `
+The room wakes up as the speakers cut through.
+Everybody leans in when Shape of You comes into view.
+One more guess can flip the scoreboard too.
+Shape of You keeps the whole round moving through.
+    `.trim(),
   },
   {
-    title: '想見你想見你想見你',
-    artist: '八三夭',
-    language: 'zh-TW',
-    aliases: ['想見你'],
+    title: 'Blinding Lights',
+    artist: 'The Weeknd',
+    language: 'en',
+    fallbackLyrics: `
+Neon colors flash before the next clue lands.
+Blinding Lights turns the countdown bright across the stands.
+Someone shouts a guess before the chorus bites.
+Blinding Lights keeps the pressure high tonight.
+    `.trim(),
   },
   {
-    title: '告白氣球',
-    artist: '周杰倫',
-    language: 'zh-TW',
+    title: 'Levitating',
+    artist: 'Dua Lipa',
+    language: 'en',
+    fallbackLyrics: `
+The beat kicks in and everyone starts celebrating.
+Hands go up the second Levitating starts vibrating.
+One right answer sends the leaderboard rotating.
+Levitating keeps the party elevating.
+    `.trim(),
   },
   {
-    title: '刻在我心底的名字',
-    artist: '盧廣仲',
-    language: 'zh-TW',
-    aliases: ['刻在我心底的名字電影版'],
+    title: 'Uptown Funk',
+    artist: 'Mark Ronson ft. Bruno Mars',
+    language: 'en',
+    fallbackLyrics: `
+The crowd steps forward when the horns all jump.
+Uptown Funk turns a quiet lobby into something pumped.
+One fast answer can change the final chunk.
+Uptown Funk keeps the whole room jumping.
+    `.trim(),
   },
   {
-    title: '修煉愛情',
-    artist: '林俊傑',
-    language: 'zh-TW',
+    title: 'Shake It Off',
+    artist: 'Taylor Swift',
+    language: 'en',
+    fallbackLyrics: `
+Missed guesses fade while the next clue lifts off.
+Shake It Off tells the room to laugh the pressure off.
+The timer drops and nobody can drift off.
+Shake It Off keeps the momentum switched on.
+    `.trim(),
   },
   {
-    title: '如果可以',
-    artist: '韋禮安',
-    language: 'zh-TW',
+    title: 'Rolling in the Deep',
+    artist: 'Adele',
+    language: 'en',
+    fallbackLyrics: `
+The next reveal arrives with heavy heat.
+Rolling in the Deep gives every guess a stronger beat.
+Someone almost solves it from the back row seat.
+Rolling in the Deep keeps the challenge sweet.
+    `.trim(),
   },
   {
-    title: '怎麼了',
-    artist: '周興哲',
-    language: 'zh-TW',
+    title: 'Happy',
+    artist: 'Pharrell Williams',
+    language: 'en',
+    fallbackLyrics: `
+The room claps back as soon as drums go snappy.
+Happy makes the slowest player move a little faster happily.
+One clean guess could swing the score exactly.
+Happy keeps the whole game bright and catchy.
+    `.trim(),
   },
   {
-    title: '光年之外',
-    artist: '鄧紫棋',
-    language: 'zh-TW',
+    title: 'Firework',
+    artist: 'Katy Perry',
+    language: 'en',
+    fallbackLyrics: `
+The chorus rises like sparks above the floor.
+Firework makes the room want one big answer more.
+The countdown glows and every player starts to roar.
+Firework leaves the whole match wanting more.
+    `.trim(),
   },
 ];
+
+export function getSeedSongFallbackLyrics(artist: string, title: string): string | null {
+  const match = seedSongs.find((song) => song.artist === artist && song.title === title);
+  return match?.fallbackLyrics ?? null;
+}
