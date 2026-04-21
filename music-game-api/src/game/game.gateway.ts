@@ -10,7 +10,11 @@ import {
 import { Logger, UsePipes, ValidationPipe } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { GameService } from './game.service';
-import { SocketActionDto, SocketGuessDto, SocketJoinRoomDto } from './dto/socket.dto';
+import {
+  SocketActionDto,
+  SocketGuessDto,
+  SocketJoinRoomDto,
+} from './dto/socket.dto';
 
 @WebSocketGateway({
   cors: {
@@ -34,7 +38,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   constructor(private readonly gameService: GameService) {
     this.gameService.registerBroadcaster((roomCode, event, payload) => {
-      this.server.to(roomCode).emit(event, payload);
+      void this.server.to(roomCode).emit(event, payload);
     });
   }
 
@@ -47,37 +51,60 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('join_room')
-  async joinRoom(@ConnectedSocket() client: Socket, @MessageBody() dto: SocketJoinRoomDto) {
-    client.join(dto.roomCode.toUpperCase());
-    const room = await this.gameService.attachSocket(dto.roomCode.toUpperCase(), dto.playerId, client.id);
+  async joinRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() dto: SocketJoinRoomDto,
+  ) {
+    await client.join(dto.roomCode.toUpperCase());
+    const room = await this.gameService.attachSocket(
+      dto.roomCode.toUpperCase(),
+      dto.playerId,
+      client.id,
+    );
     this.server.to(dto.roomCode.toUpperCase()).emit('room_state', room);
     return room;
   }
 
   @SubscribeMessage('start_game')
   async startGame(@MessageBody() dto: SocketActionDto) {
-    const result = await this.gameService.startGame(dto.roomCode.toUpperCase(), dto.playerId);
+    const result = await this.gameService.startGame(
+      dto.roomCode.toUpperCase(),
+      dto.playerId,
+    );
     this.server.to(dto.roomCode.toUpperCase()).emit('room_state', result.room);
-    this.server.to(dto.roomCode.toUpperCase()).emit('round_started', result.round);
+    this.server
+      .to(dto.roomCode.toUpperCase())
+      .emit('round_started', result.round);
     return result.room;
   }
 
   @SubscribeMessage('submit_guess')
   async submitGuess(@MessageBody() dto: SocketGuessDto) {
-    return this.gameService.submitGuess(dto.roomCode.toUpperCase(), dto.playerId, dto.guess);
+    return this.gameService.submitGuess(
+      dto.roomCode.toUpperCase(),
+      dto.playerId,
+      dto.guess,
+    );
   }
 
   @SubscribeMessage('next_round')
   async nextRound(@MessageBody() dto: SocketActionDto) {
-    const result = await this.gameService.nextRound(dto.roomCode.toUpperCase(), dto.playerId);
+    const result = await this.gameService.nextRound(
+      dto.roomCode.toUpperCase(),
+      dto.playerId,
+    );
     this.server.to(dto.roomCode.toUpperCase()).emit('room_state', result.room);
 
     if (result.gameEnded) {
-      this.server.to(dto.roomCode.toUpperCase()).emit('game_ended', result.room);
+      this.server
+        .to(dto.roomCode.toUpperCase())
+        .emit('game_ended', result.room);
       return result.room;
     }
 
-    this.server.to(dto.roomCode.toUpperCase()).emit('round_started', result.round);
+    this.server
+      .to(dto.roomCode.toUpperCase())
+      .emit('round_started', result.round);
     return result.room;
   }
 }

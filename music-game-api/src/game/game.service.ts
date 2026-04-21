@@ -8,7 +8,6 @@ import {
 import { CreateRoomDto } from './dto/create-room.dto';
 import { CreateSongDto } from './dto/create-song.dto';
 import { JoinRoomDto } from './dto/join-room.dto';
-import { SongEntity } from './entities/song.entity';
 import { MaskingService } from './masking.service';
 import { PersistenceService } from './persistence.service';
 import { LyricsService } from './lyrics.service';
@@ -73,7 +72,8 @@ export class GameService implements OnModuleInit {
     const room = this.getRoom(roomCode);
     const normalizedNickname = dto.nickname.trim();
     const existingPlayer = [...room.players.values()].find(
-      (player) => player.nickname.toLowerCase() === normalizedNickname.toLowerCase(),
+      (player) =>
+        player.nickname.toLowerCase() === normalizedNickname.toLowerCase(),
     );
 
     if (existingPlayer) {
@@ -119,14 +119,18 @@ export class GameService implements OnModuleInit {
 
   async detachSocket(socketId: string) {
     const room = [...this.rooms.values()].find((entry) =>
-      [...entry.players.values()].some((player) => player.socketId === socketId),
+      [...entry.players.values()].some(
+        (player) => player.socketId === socketId,
+      ),
     );
 
     if (!room) {
       return;
     }
 
-    const player = [...room.players.values()].find((entry) => entry.socketId === socketId);
+    const player = [...room.players.values()].find(
+      (entry) => entry.socketId === socketId,
+    );
     if (!player) {
       return;
     }
@@ -258,7 +262,9 @@ export class GameService implements OnModuleInit {
 
   private async prepareRound(room: RoomState) {
     const songs = await this.persistenceService.getSongs();
-    const availableSongs = songs.filter((song) => !room.usedSongIds.has(song.id));
+    const availableSongs = songs.filter(
+      (song) => !room.usedSongIds.has(song.id),
+    );
     if (availableSongs.length === 0) {
       throw new BadRequestException('No songs left in the catalog.');
     }
@@ -275,20 +281,29 @@ export class GameService implements OnModuleInit {
           songId: song.id,
           songTitle: song.title,
           songArtist: song.artist,
-          acceptedAnswers: this.maskingService.buildAnswerSet(song.title, song.aliases ?? []),
+          acceptedAnswers: this.maskingService.buildAnswerSet(
+            song.title,
+            song.aliases ?? [],
+          ),
           maskedLyrics: lyrics.maskedLyrics,
           rawLyrics: lyrics.rawLyrics,
           startedAt: new Date().toISOString(),
-          endsAt: new Date(Date.now() + room.roundDurationSeconds * 1000).toISOString(),
+          endsAt: new Date(
+            Date.now() + room.roundDurationSeconds * 1000,
+          ).toISOString(),
           guessedPlayerIds: new Set<string>(),
           phase: 'guessing' as const,
         };
       } catch (error) {
-        this.logger.warn(`Skipping song ${song.artist} - ${song.title}: ${(error as Error).message}`);
+        this.logger.warn(
+          `Skipping song ${song.artist} - ${song.title}: ${(error as Error).message}`,
+        );
       }
     }
 
-    throw new BadRequestException('Unable to prepare a playable round from the current catalog.');
+    throw new BadRequestException(
+      'Unable to prepare a playable round from the current catalog.',
+    );
   }
 
   private scheduleRoundTimeout(roomCode: string, roundId: string) {
@@ -348,7 +363,11 @@ export class GameService implements OnModuleInit {
         isHost: player.isHost,
         connected: player.connected,
       }))
-      .sort((left, right) => right.score - left.score || left.nickname.localeCompare(right.nickname));
+      .sort(
+        (left, right) =>
+          right.score - left.score ||
+          left.nickname.localeCompare(right.nickname),
+      );
 
     return {
       code: room.code,
@@ -369,9 +388,14 @@ export class GameService implements OnModuleInit {
             endsAt: room.currentRound.endsAt,
             phase: room.currentRound.phase,
             winnerPlayerId: room.currentRound.winnerPlayerId,
-            revealTitle: room.currentRound.phase === 'revealed' ? room.currentRound.songTitle : undefined,
+            revealTitle:
+              room.currentRound.phase === 'revealed'
+                ? room.currentRound.songTitle
+                : undefined,
             revealArtist:
-              room.currentRound.phase === 'revealed' ? room.currentRound.songArtist : undefined,
+              room.currentRound.phase === 'revealed'
+                ? room.currentRound.songArtist
+                : undefined,
           }
         : undefined,
     };
@@ -403,9 +427,10 @@ export class GameService implements OnModuleInit {
     const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let code = '';
     do {
-      code = Array.from({ length: 5 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join(
-        '',
-      );
+      code = Array.from(
+        { length: 5 },
+        () => alphabet[Math.floor(Math.random() * alphabet.length)],
+      ).join('');
     } while (this.rooms.has(code));
 
     return code;

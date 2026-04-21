@@ -8,6 +8,8 @@ jest.mock('axios');
 
 describe('LyricsService', () => {
   const mockedAxios = jest.mocked(axios);
+  const getLyricsCacheMock = jest.fn();
+  const saveLyricsCacheMock = jest.fn();
 
   const song: SongEntity = {
     id: 'song-1',
@@ -18,25 +20,25 @@ describe('LyricsService', () => {
   };
 
   const persistenceService = {
-    getLyricsCache: jest.fn(),
-    saveLyricsCache: jest.fn(),
+    getLyricsCache: getLyricsCacheMock,
+    saveLyricsCache: saveLyricsCacheMock,
   } as unknown as PersistenceService;
 
   const service = new LyricsService(new MaskingService(), persistenceService);
 
   beforeEach(() => {
     jest.resetAllMocks();
-    (persistenceService.getLyricsCache as jest.Mock).mockResolvedValue(null);
-    (persistenceService.saveLyricsCache as jest.Mock).mockResolvedValue(undefined);
+    getLyricsCacheMock.mockResolvedValue(null);
+    saveLyricsCacheMock.mockResolvedValue(undefined);
   });
 
   it('uses bundled fallback lyrics for seed songs without calling the external provider', async () => {
     const result = await service.getMaskedLyrics(song);
 
-    expect(mockedAxios.get).not.toHaveBeenCalled();
+    expect(mockedAxios.get.mock.calls).toHaveLength(0);
     expect(result.provider).toBe('seed-local');
     expect(result.rawLyrics).toContain('Shape of You');
     expect(result.maskedLyrics).not.toContain('Shape of You');
-    expect(persistenceService.saveLyricsCache).toHaveBeenCalled();
+    expect(saveLyricsCacheMock).toHaveBeenCalled();
   });
 });
