@@ -4,11 +4,34 @@ This repository uses GitHub templates plus Codex-assisted workflows for issue an
 
 ## Operating Model
 
-- GitHub writes are `preview first, apply second`.
-- Codex may draft issue and PR content, labels, and updates, but it should not write to GitHub until the user explicitly approves the action in the current session.
+- GitHub writes are `preview first, apply second` for issue and PR content.
+- Codex may draft issue and PR content, labels, and updates before applying them.
+- After the user explicitly approves the reviewed content in the current session, Codex may complete the follow-up Git and GitHub write steps, including branch creation, commit, push, PR creation, status updates, merge, and cleanup when the required checks pass.
 - English is the default language for issue and PR metadata.
 - This repository has one GitHub system of record: `yun199905/music-game`.
 - `music-game-web` and `music-game-api` are tracked within the same repo and are distinguished by labels, not separate project boards.
+
+## Branch Strategy
+
+This repository uses a simplified Git Flow model.
+
+- `main`
+  - Always represents the latest deployable state
+  - All completed work ultimately merges into `main`
+- `feature/<issue-number>-<slug>`
+  - Default branch type for features, tasks, docs, and refactors
+  - Cut from `main`
+  - Merged back into `main`
+- `hotfix/<issue-number>-<slug>`
+  - Used for urgent fixes that must land directly from the current production-ready branch
+  - Cut from `main`
+  - Merged back into `main`
+- `release/<version-or-date>`
+  - Used only when multiple completed changes need coordinated validation or release notes before publication
+  - Cut from `main`
+  - Merged back into `main`
+
+See `docs/git-flow.md` for the detailed branch lifecycle.
 
 ## Label Taxonomy
 
@@ -57,6 +80,38 @@ Every PR should include:
 - A linked issue reference
 - Validation commands actually run
 - A short risks or follow-up section if relevant
+
+## Status Lifecycle
+
+- `status:triage`
+  - Default for newly filed work
+- `status:ready`
+  - Scope and acceptance criteria are implementation-ready
+- `status:in-progress`
+  - Active implementation is underway on a branch
+- `status:review`
+  - Implementation is in a PR and waiting for review or merge
+- `closed`
+  - Work is complete, superseded, or intentionally discarded
+
+Replace the existing status label instead of stacking multiple status labels.
+
+## End-to-End Workflow
+
+1. Draft the issue
+   - Codex proposes title, labels, and body using the repository templates.
+2. Create the issue
+   - After approval, Codex creates the issue and applies exactly one type, priority, area, and status label.
+3. Start the branch
+   - Create `feature/*`, `hotfix/*`, or `release/*` from the correct base branch.
+4. Implement and validate
+   - Run the relevant test and formatting commands for the touched subsystems.
+5. Draft the PR
+   - Codex prepares the PR title/body and links the primary issue.
+6. Open the PR
+   - After approval, Codex pushes, creates the PR, and moves the issue to `status:review`.
+7. Merge and clean up
+   - When the documented checks pass and the user has approved the flow, Codex may merge and remove stale branches.
 
 ## Codex Workflows
 
@@ -130,6 +185,34 @@ Codex may also:
 
 For any write, Codex should show the proposed change first unless the user explicitly asks it to apply the already reviewed draft.
 
+### Merge an Approved PR
+
+Use when:
+
+- the PR base is correct
+- the file set has been checked for unrelated changes
+- the validation commands have actually been run
+- the user has approved the merge flow in the current session
+
+Codex should:
+
+1. Confirm the PR is clean and mergeable
+2. Merge with squash by default
+3. Close or update the linked issue
+4. Delete remote and local feature branches when safe
+
+### Recover a Polluted Branch
+
+Use when a PR contains unrelated commits or files because the branch was cut from the wrong base.
+
+Codex should:
+
+1. Create a clean branch from the correct base
+2. Cherry-pick only the intended commits
+3. Push the clean branch
+4. Open a replacement PR
+5. Close the superseded PR with a short explanation
+
 ## Label Selection Rules
 
 - Pick exactly one type label.
@@ -161,6 +244,42 @@ Examples:
 - `web: stabilize frontend test workflow`
 - `api: add room lifecycle tests`
 - `repo: add GitHub governance templates`
+
+## Branch Naming Rules
+
+- Feature: `feature/<issue-number>-<slug>`
+- Hotfix: `hotfix/<issue-number>-<slug>`
+- Release: `release/<version-or-date>`
+
+Examples:
+
+- `feature/12-room-rejoin-reliability`
+- `hotfix/34-fix-start-game-timeout`
+- `release/2026-04-30`
+
+## Commit Naming Rules
+
+- Prefer conventional scope-first summaries:
+  - `web: stabilize socket reconnect flow`
+  - `api: improve room persistence upsert logic`
+  - `repo: add GitHub governance templates`
+- Keep each commit focused enough to cherry-pick into a clean branch if needed.
+
+## Merge Rules
+
+- Default PR merge strategy is squash merge.
+- Do not merge a PR that still contains unrelated files, polluted base commits, or missing validation notes.
+- If Codex is performing the merge, it must first verify:
+  - base branch is correct
+  - file scope matches the approved work
+  - required validation commands were executed
+  - linked issue and labels are consistent
+
+## Documentation and Formatting Gate
+
+- Root governance files, `docs/*.md`, and `.github/*` templates must pass `npm run check:docs` from the repo root before merge.
+- Code changes must still pass the relevant subsystem validation, such as API tests or frontend tests/build checks.
+- Prettier is the canonical formatter for documentation assets. Markdown lint supplements structure checks and should not be configured to fight Prettier.
 
 ## Triage Guidance
 

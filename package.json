@@ -1,0 +1,13 @@
+{
+  "name": "music-game-governance",
+  "private": true,
+  "scripts": {
+    "format:docs": "prettier --write \"{*.md,AGENTS.md,GITHUB_MCP_SETUP.md,docs/**/*.md,.github/**/*.md,.github/**/*.yml,.github/**/*.yaml,.vscode/**/*.json,*.json,*.yml,*.yaml}\"",
+    "lint:docs": "markdownlint-cli2 \"AGENTS.md\" \"GITHUB_MCP_SETUP.md\" \"docs/**/*.md\"",
+    "check:docs": "prettier --check \"{*.md,AGENTS.md,GITHUB_MCP_SETUP.md,docs/**/*.md,.github/**/*.md,.github/**/*.yml,.github/**/*.yaml,.vscode/**/*.json,*.json,*.yml,*.yaml}\" && markdownlint-cli2 \"AGENTS.md\" \"GITHUB_MCP_SETUP.md\" \"docs/**/*.md\""
+  },
+  "devDependencies": {
+    "markdownlint-cli2": "^0.18.1",
+    "prettier": "^3.8.1"
+  }
+}
