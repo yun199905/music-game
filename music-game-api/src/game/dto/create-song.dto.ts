@@ -30,4 +30,12 @@ export class CreateSongDto {
   @IsArray()
   @IsString({ each: true })
   aliases?: string[];
+
+  @ApiPropertyOptional({
+    example: '還沒到的櫻花 季節早已盛開\nJust a local fallback lyrics block.',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(8000)
+  localLyrics?: string;
 }

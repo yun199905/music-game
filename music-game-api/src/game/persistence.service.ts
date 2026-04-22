@@ -9,7 +9,7 @@ import { GuessEntity } from './entities/guess.entity';
 import { LyricsCacheEntity } from './entities/lyrics-cache.entity';
 import { SongEntity } from './entities/song.entity';
 import { RoomState } from './game.types';
-import { SeedSong, seedSongs } from './song-catalog';
+import { SeedSong, findSeedSong, seedSongs } from './song-catalog';
 
 @Injectable()
 export class PersistenceService {
@@ -51,8 +51,28 @@ export class PersistenceService {
       return;
     }
 
-    const count = await this.songRepository.count();
-    if (count > 0) {
+    const existingSongs = await this.songRepository.find();
+    if (existingSongs.length > 0) {
+      const missingLocalLyrics = existingSongs.flatMap((song) => {
+        const seed = findSeedSong(song.artist, song.title);
+        if (!seed?.fallbackLyrics || song.localLyrics?.trim()) {
+          return [];
+        }
+
+        return [
+          {
+            ...song,
+            localLyrics: seed.fallbackLyrics,
+            aliases: song.aliases?.length ? song.aliases : (seed.aliases ?? []),
+            language: song.language ?? seed.language,
+          },
+        ];
+      });
+
+      if (missingLocalLyrics.length > 0) {
+        await this.songRepository.save(missingLocalLyrics);
+      }
+
       return;
     }
 
@@ -69,7 +89,13 @@ export class PersistenceService {
       });
     }
 
-    return [...this.memorySongs.values()].filter((song) => song.enabled);
+    return [...this.memorySongs.values()]
+      .filter((song) => song.enabled)
+      .sort(
+        (left, right) =>
+          left.artist.localeCompare(right.artist) ||
+          left.title.localeCompare(right.title),
+      );
   }
 
   async addSong(dto: CreateSongDto): Promise<SongEntity> {
@@ -195,13 +221,32 @@ export class PersistenceService {
   }
 
   private mapSeedToEntity(song: SeedSong | CreateSongDto): SongEntity {
+    const aliases = (song.aliases ?? [])
+      .map((alias) => alias.trim())
+      .filter(Boolean);
+    const uniqueAliases = [...new Set(aliases)];
+    const localLyricsSource = this.getLocalLyrics(song);
+
     return {
       id: crypto.randomUUID(),
-      title: song.title,
-      artist: song.artist,
+      title: song.title.trim(),
+      artist: song.artist.trim(),
       language: song.language,
-      aliases: song.aliases ?? [],
+      aliases: uniqueAliases,
       enabled: true,
+      localLyrics: localLyricsSource?.trim() || null,
     };
+  }
+
+  private getLocalLyrics(song: SeedSong | CreateSongDto): string | undefined {
+    if (this.isSeedSong(song)) {
+      return song.fallbackLyrics;
+    }
+
+    return song.localLyrics;
+  }
+
+  private isSeedSong(song: SeedSong | CreateSongDto): song is SeedSong {
+    return 'fallbackLyrics' in song;
   }
 }

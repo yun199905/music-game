@@ -38,3 +38,21 @@ export interface RoomSessionResponse {
   playerId: string;
   room: RoomSnapshot;
 }
+
+export interface SongCatalogItem {
+  id: string;
+  title: string;
+  artist: string;
+  language: 'zh-TW' | 'zh-CN' | 'en';
+  aliases?: string[];
+  enabled: boolean;
+  localLyrics?: string | null;
+}
+
+export interface CreateSongRequest {
+  title: string;
+  artist: string;
+  language: 'zh-TW' | 'zh-CN' | 'en';
+  aliases?: string[];
+  localLyrics?: string;
+}

@@ -101,8 +101,13 @@ export function getSeedSongFallbackLyrics(
   artist: string,
   title: string,
 ): string | null {
-  const match = seedSongs.find(
-    (song) => song.artist === artist && song.title === title,
-  );
+  const match = findSeedSong(artist, title);
   return match?.fallbackLyrics ?? null;
+}
+
+export function findSeedSong(artist: string, title: string): SeedSong | null {
+  return (
+    seedSongs.find((song) => song.artist === artist && song.title === title) ??
+    null
+  );
 }

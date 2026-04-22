@@ -28,9 +28,23 @@ export class LyricsService {
       };
     }
 
+    if (song.localLyrics?.trim()) {
+      return this.buildAndCacheLyrics(
+        song,
+        song.localLyrics.trim(),
+        'catalog-local',
+      );
+    }
+
     const localFallback = getSeedSongFallbackLyrics(song.artist, song.title);
     if (localFallback) {
       return this.buildAndCacheLyrics(song, localFallback, 'seed-local');
+    }
+
+    if (song.language.toLowerCase().startsWith('zh')) {
+      throw new Error(
+        `Local lyrics are required for ${song.language} songs: ${song.artist} - ${song.title}`,
+      );
     }
 
     const provider = process.env.LYRICS_PROVIDER ?? 'lyrics.ovh';

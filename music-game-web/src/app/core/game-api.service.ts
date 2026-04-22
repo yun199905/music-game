@@ -1,6 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { appConfigValues } from './app-config';
-import { RoomSessionResponse, RoomSnapshot } from './game.models';
+import {
+  CreateSongRequest,
+  RoomSessionResponse,
+  RoomSnapshot,
+  SongCatalogItem,
+} from './game.models';
 
 @Injectable({ providedIn: 'root' })
 export class GameApiService {
@@ -20,6 +25,14 @@ export class GameApiService {
 
   async getRoom(roomCode: string): Promise<RoomSnapshot> {
     return this.get<RoomSnapshot>(`/rooms/${roomCode}`);
+  }
+
+  async listSongs(): Promise<SongCatalogItem[]> {
+    return this.get<SongCatalogItem[]>('/songs');
+  }
+
+  async createSong(payload: CreateSongRequest): Promise<SongCatalogItem> {
+    return this.post<SongCatalogItem>('/songs', payload);
   }
 
   private async post<T>(path: string, payload: unknown): Promise<T> {

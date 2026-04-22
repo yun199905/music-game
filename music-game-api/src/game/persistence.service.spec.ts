@@ -66,4 +66,53 @@ describe('PersistenceService', () => {
     expect(playerRepository.delete).toHaveBeenCalledTimes(2);
     expect(playerRepository.save).toHaveBeenCalledTimes(2);
   });
+
+  it('stores local lyrics and normalized aliases when adding a custom song without a database', async () => {
+    const service = new PersistenceService();
+
+    const savedSong = await service.addSong({
+      title: ' 晴天 ',
+      artist: ' 周杰倫 ',
+      language: 'zh-TW',
+      aliases: [' 天晴 ', '晴天', ''],
+      localLyrics: ' 窗外的麻雀在電線桿上多嘴。 ',
+    });
+
+    expect(savedSong.title).toBe('晴天');
+    expect(savedSong.artist).toBe('周杰倫');
+    expect(savedSong.aliases).toEqual(['天晴', '晴天']);
+    expect(savedSong.localLyrics).toBe('窗外的麻雀在電線桿上多嘴。');
+  });
+
+  it('backfills local lyrics for existing seed songs in the database', async () => {
+    const songRepository: MockRepository<SongEntity> = {
+      find: jest.fn().mockResolvedValue([
+        {
+          id: 'seed-1',
+          title: 'Shape of You',
+          artist: 'Ed Sheeran',
+          language: 'en',
+          aliases: [],
+          enabled: true,
+          localLyrics: null,
+        },
+      ]),
+      save: jest.fn().mockResolvedValue(undefined),
+    };
+
+    const service = new PersistenceService(
+      songRepository as Repository<SongEntity>,
+    );
+
+    await service.ensureSeedSongs();
+
+    expect(songRepository.save).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'seed-1',
+          title: 'Shape of You',
+        }),
+      ]),
+    );
+  });
 });
