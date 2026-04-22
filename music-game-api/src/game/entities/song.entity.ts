@@ -19,4 +19,7 @@ export class SongEntity {
 
   @Column({ type: 'simple-json', nullable: true })
   aliases?: string[];
+
+  @Column({ type: 'text', nullable: true })
+  localLyrics?: string | null;
 }

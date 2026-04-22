@@ -1,9 +1,10 @@
 <main
-  class="min-h-screen bg-[radial-gradient(circle_at_top,_#fde68a,_#f8fafc_40%,_#dbeafe_100%)] px-4 py-6 text-slate-900"
+  class="app-shell min-h-screen bg-[radial-gradient(circle_at_top,_#fde68a,_#f8fafc_40%,_#dbeafe_100%)] px-4 py-6 text-slate-900"
+  [attr.data-scene]="scene()"
 >
   <section class="mx-auto flex max-w-6xl flex-col gap-6 lg:grid lg:grid-cols-[1.1fr_0.9fr]">
     <article
-      class="rounded-[2rem] border border-white/60 bg-white/80 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur"
+      class="scene-panel rounded-[2rem] border border-white/60 bg-white/80 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur"
     >
       <div class="flex items-start justify-between gap-4">
         <div>
@@ -12,12 +13,12 @@
             Multiplayer lyrics guessing for small rooms.
           </h1>
         </div>
-        @if (room(); as activeRoom) {
+        @if (canonicalRoomCode()) {
           <div
-            class="rounded-full border border-slate-200 bg-slate-950 px-4 py-2 text-right text-xs text-white"
+            class="room-badge rounded-full border border-slate-200 bg-slate-950 px-4 py-2 text-right text-xs text-white"
           >
             <div class="uppercase tracking-[0.3em] text-slate-400">Room</div>
-            <div class="mt-1 text-lg font-bold">{{ activeRoom.code }}</div>
+            <div class="mt-1 text-lg font-bold">{{ canonicalRoomCode() }}</div>
           </div>
         }
       </div>
@@ -88,13 +89,13 @@
 
         <div class="mt-6 flex flex-col gap-3 sm:flex-row">
           <button
-            class="rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
+            class="action-button action-button--primary rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
             (click)="createRoom()"
           >
             Create Room
           </button>
           <button
-            class="rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-950"
+            class="action-button action-button--secondary rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-950"
             (click)="joinRoom()"
           >
             Join Room
@@ -105,13 +106,18 @@
       @if (room(); as activeRoom) {
         <div class="mt-6 flex flex-col gap-3">
           <div
-            class="flex flex-wrap items-center gap-3 rounded-3xl border border-slate-200 bg-slate-50/80 p-4"
+            class="status-strip flex flex-wrap items-center gap-3 rounded-3xl border border-slate-200 bg-slate-50/80 p-4"
           >
             <div>
               <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Status</p>
               <p class="mt-1 text-xl font-black capitalize">
                 {{ activeRoom.status.replace('_', ' ') }}
               </p>
+            </div>
+            <div
+              class="status-pill rounded-full bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.22em] text-slate-600"
+            >
+              {{ activeRoom.code }}
             </div>
             <div class="ml-auto text-right">
               <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
@@ -179,7 +185,7 @@
             </label>
 
             <button
-              class="rounded-full bg-amber-400 px-6 py-3 text-sm font-black text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:bg-slate-200"
+              class="action-button action-button--accent rounded-full bg-amber-400 px-6 py-3 text-sm font-black text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:bg-slate-200"
               [disabled]="activeRoom.phase !== 'guessing' || hasSubmittedCorrectAnswer()"
               (click)="submitGuess()"
             >
@@ -189,7 +195,7 @@
 
           <div class="flex flex-wrap gap-3">
             <button
-              class="rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+              class="action-button action-button--primary rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
               [disabled]="!canStart() || activeRoom.status !== 'lobby'"
               (click)="startGame()"
             >
@@ -197,7 +203,7 @@
             </button>
 
             <button
-              class="rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-900 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+              class="action-button action-button--secondary rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-900 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
               [disabled]="
                 !isHost() || activeRoom.phase !== 'revealed' || activeRoom.status === 'finished'
               "
@@ -207,7 +213,7 @@
             </button>
 
             <button
-              class="rounded-full border border-rose-200 bg-rose-50 px-6 py-3 text-sm font-bold text-rose-700"
+              class="action-button action-button--danger rounded-full border border-rose-200 bg-rose-50 px-6 py-3 text-sm font-bold text-rose-700"
               (click)="leaveRoom()"
             >
               Leave Room
@@ -231,7 +237,7 @@
 
     <aside class="space-y-6">
       <section
-        class="rounded-[2rem] border border-slate-200 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)]"
+        class="scene-panel rounded-[2rem] border border-slate-200 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)]"
       >
         <div class="flex items-center justify-between">
           <div>
@@ -290,7 +296,7 @@
       </section>
 
       <section
-        class="rounded-[2rem] border border-slate-200 bg-slate-950 p-5 text-white shadow-[0_24px_80px_rgba(15,23,42,0.12)]"
+        class="scene-panel rounded-[2rem] border border-slate-200 bg-slate-950 p-5 text-white shadow-[0_24px_80px_rgba(15,23,42,0.12)]"
       >
         <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">
           Round insight
@@ -309,6 +315,173 @@
             <p>No correct answer has been locked for this round yet.</p>
           }
         </div>
+      </section>
+
+      <section
+        class="catalog-panel scene-panel rounded-[2rem] border border-slate-200 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)]"
+      >
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.25em] text-sky-600">
+              Catalog Studio
+            </p>
+            <h2 class="mt-2 text-2xl font-black">Song maintenance</h2>
+          </div>
+          <button
+            class="action-button action-button--secondary rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-900"
+            (click)="toggleCatalog()"
+          >
+            {{ catalogOpen() ? 'Collapse' : 'Open' }}
+          </button>
+        </div>
+
+        <p class="mt-3 text-sm leading-6 text-slate-600">
+          Add playable songs without changing code. Chinese songs should include local lyrics so
+          rounds stay stable even when the external provider cannot resolve them.
+        </p>
+
+        @if (catalogOpen()) {
+          <div class="mt-5 grid gap-4">
+            <div class="grid gap-3 sm:grid-cols-2">
+              <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
+                <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+                  >Song Title</span
+                >
+                <input
+                  class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
+                  [ngModel]="songTitle()"
+                  (ngModelChange)="updateSongField('title', $event)"
+                  placeholder="晴天"
+                />
+              </label>
+
+              <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
+                <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+                  >Artist</span
+                >
+                <input
+                  class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
+                  [ngModel]="songArtist()"
+                  (ngModelChange)="updateSongField('artist', $event)"
+                  placeholder="周杰倫"
+                />
+              </label>
+            </div>
+
+            <div class="grid gap-3 sm:grid-cols-[0.6fr_1.4fr]">
+              <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
+                <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+                  >Language</span
+                >
+                <select
+                  class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
+                  [ngModel]="songLanguage()"
+                  (ngModelChange)="updateSongField('language', $event)"
+                >
+                  <option value="en">English</option>
+                  <option value="zh-TW">繁體中文</option>
+                  <option value="zh-CN">简体中文</option>
+                </select>
+              </label>
+
+              <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
+                <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+                  >Aliases</span
+                >
+                <input
+                  class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
+                  [ngModel]="songAliases()"
+                  (ngModelChange)="updateSongField('aliases', $event)"
+                  placeholder="天晴, Sunny Day"
+                />
+              </label>
+            </div>
+
+            <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
+              <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+                >Local Lyrics</span
+              >
+              <textarea
+                class="mt-2 min-h-32 w-full resize-y bg-transparent text-base font-medium leading-7 outline-none"
+                [ngModel]="songLocalLyrics()"
+                (ngModelChange)="updateSongField('localLyrics', $event)"
+                placeholder="Paste playable fallback lyrics here. Chinese songs require this field."
+              ></textarea>
+            </label>
+
+            <div class="flex flex-wrap gap-3">
+              <button
+                class="action-button action-button--primary rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white"
+                [disabled]="catalogSaving()"
+                (click)="submitSong()"
+              >
+                {{ catalogSaving() ? 'Saving...' : 'Add Song' }}
+              </button>
+              <div
+                class="rounded-full bg-slate-100 px-4 py-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-500"
+              >
+                {{ catalogSongs().length }} songs loaded
+              </div>
+            </div>
+
+            <div
+              class="rounded-3xl border border-slate-200 bg-slate-50/70 p-4 text-sm text-slate-600"
+            >
+              {{ catalogMessage() }}
+            </div>
+
+            @if (catalogError()) {
+              <div class="rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+                {{ catalogError() }}
+              </div>
+            }
+
+            <div
+              class="catalog-list rounded-[1.75rem] border border-slate-200 bg-slate-950/95 p-4 text-white"
+            >
+              <div class="flex items-center justify-between gap-3">
+                <div class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">
+                  Playable songs
+                </div>
+                @if (catalogLoading()) {
+                  <div class="text-xs uppercase tracking-[0.25em] text-slate-500">Loading</div>
+                }
+              </div>
+
+              @if (catalogSongs().length) {
+                <div class="mt-4 grid gap-3">
+                  @for (song of catalogSongs(); track trackSong($index, song)) {
+                    <article class="rounded-3xl border border-white/10 bg-white/5 p-4">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <h3 class="text-lg font-black">{{ song.title }}</h3>
+                        <span
+                          class="rounded-full bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-sky-200"
+                        >
+                          {{ song.language }}
+                        </span>
+                        @if (song.localLyrics) {
+                          <span
+                            class="rounded-full bg-emerald-400/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-200"
+                          >
+                            local lyrics
+                          </span>
+                        }
+                      </div>
+                      <p class="mt-2 text-sm text-slate-300">{{ song.artist }}</p>
+                      @if (song.aliases?.length) {
+                        <p class="mt-3 text-xs uppercase tracking-[0.18em] text-slate-400">
+                          Aliases: {{ song.aliases?.join(', ') }}
+                        </p>
+                      }
+                    </article>
+                  }
+                </div>
+              } @else {
+                <p class="mt-4 text-sm text-slate-400">No songs are loaded yet.</p>
+              }
+            </div>
+          </div>
+        }
       </section>
     </aside>
   </section>

@@ -5,7 +5,13 @@ import { interval } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { GameApiService } from './core/game-api.service';
 import { GameSocketService } from './core/game-socket.service';
-import { PlayerSnapshot, RoomSnapshot, RoundSnapshot } from './core/game.models';
+import {
+  CreateSongRequest,
+  PlayerSnapshot,
+  RoomSnapshot,
+  RoundSnapshot,
+  SongCatalogItem,
+} from './core/game.models';
 
 @Component({
   selector: 'app-root',
@@ -30,6 +36,17 @@ export class App {
   protected readonly errorMessage = signal('');
   protected readonly countdown = signal(0);
   protected readonly hasSubmittedCorrectAnswer = signal(false);
+  protected readonly catalogOpen = signal(true);
+  protected readonly catalogLoading = signal(false);
+  protected readonly catalogSaving = signal(false);
+  protected readonly catalogMessage = signal('Catalog tools are ready for quick song maintenance.');
+  protected readonly catalogError = signal('');
+  protected readonly catalogSongs = signal<SongCatalogItem[]>([]);
+  protected readonly songTitle = signal('');
+  protected readonly songArtist = signal('');
+  protected readonly songLanguage = signal<'zh-TW' | 'zh-CN' | 'en'>('en');
+  protected readonly songAliases = signal('');
+  protected readonly songLocalLyrics = signal('');
 
   protected readonly isHost = computed(() => this.room()?.hostPlayerId === this.playerId());
   protected readonly currentRound = computed(() => this.room()?.currentRound);
@@ -56,12 +73,31 @@ export class App {
   protected readonly currentPlayer = computed(
     () => this.leaderboard().find((player) => player.id === this.playerId()) ?? null,
   );
+  protected readonly scene = computed(() => {
+    const room = this.room();
+    if (!room) {
+      return 'lobby';
+    }
+
+    if (room.status === 'finished') {
+      return 'finished';
+    }
+
+    if (room.phase === 'revealed') {
+      return 'revealed';
+    }
+
+    if (room.phase === 'guessing') {
+      return 'guessing';
+    }
+
+    return 'lobby';
+  });
+  protected readonly canonicalRoomCode = computed(() => this.room()?.code ?? this.joinCode());
 
   constructor() {
     this.socket.onRoomState((room) => {
-      this.room.set(room);
-      this.syncCountdown(room.currentRound);
-      this.persistSession();
+      this.syncRoomState(room);
       if (room.phase === 'revealed') {
         this.hasSubmittedCorrectAnswer.set(false);
       }
@@ -84,8 +120,7 @@ export class App {
     });
 
     this.socket.onGameEnded((room) => {
-      this.room.set(room);
-      this.persistSession();
+      this.syncRoomState(room);
       this.notice.set('Game finished. Final scores are locked.');
     });
 
@@ -96,9 +131,7 @@ export class App {
     });
 
     this.socket.onReconnect((room) => {
-      this.room.set(room);
-      this.syncCountdown(room.currentRound);
-      this.persistSession();
+      this.syncRoomState(room);
       this.notice.set(`Reconnected to room ${room.code}.`);
     });
 
@@ -106,6 +139,7 @@ export class App {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.tickCountdown());
 
+    void this.loadSongs();
     void this.restoreSession();
   }
 
@@ -123,6 +157,33 @@ export class App {
     this.answer.set(value);
   }
 
+  protected updateSongField(
+    field: 'title' | 'artist' | 'language' | 'aliases' | 'localLyrics',
+    value: string,
+  ) {
+    if (field === 'title') {
+      this.songTitle.set(value);
+      return;
+    }
+
+    if (field === 'artist') {
+      this.songArtist.set(value);
+      return;
+    }
+
+    if (field === 'language') {
+      this.songLanguage.set(value as 'zh-TW' | 'zh-CN' | 'en');
+      return;
+    }
+
+    if (field === 'aliases') {
+      this.songAliases.set(value);
+      return;
+    }
+
+    this.songLocalLyrics.set(value);
+  }
+
   protected async createRoom() {
     if (!this.nickname().trim()) {
       this.errorMessage.set('Nickname is required.');
@@ -137,7 +198,9 @@ export class App {
         roundDurationSeconds: this.roundDurationSeconds(),
       });
       await this.applySession(session);
-      this.notice.set('Room created. Share the code and wait for players.');
+      this.notice.set(
+        `Room ${this.canonicalRoomCode()} created. Share the code and wait for players.`,
+      );
     } catch (error) {
       this.errorMessage.set((error as Error).message);
     }
@@ -151,9 +214,10 @@ export class App {
 
     try {
       this.errorMessage.set('');
-      const session = await this.api.joinRoom(this.joinCode().trim(), this.nickname().trim());
+      const requestedRoomCode = this.joinCode().trim().toUpperCase();
+      const session = await this.api.joinRoom(requestedRoomCode, this.nickname().trim());
       await this.applySession(session);
-      this.notice.set('Joined room. Waiting for the host to start.');
+      this.notice.set(`Joined room ${this.canonicalRoomCode()}. Waiting for the host to start.`);
     } catch (error) {
       this.errorMessage.set((error as Error).message);
     }
@@ -223,22 +287,77 @@ export class App {
     this.clearSession();
   }
 
+  protected toggleCatalog() {
+    this.catalogOpen.update((open) => !open);
+  }
+
+  protected async submitSong() {
+    const title = this.songTitle().trim();
+    const artist = this.songArtist().trim();
+    const language = this.songLanguage();
+    const localLyrics = this.songLocalLyrics().trim();
+
+    if (!title || !artist) {
+      this.catalogError.set('Song title and artist are required.');
+      return;
+    }
+
+    if (language.startsWith('zh') && !localLyrics) {
+      this.catalogError.set('Chinese songs must include local lyrics so rounds stay playable.');
+      return;
+    }
+
+    const payload: CreateSongRequest = {
+      title,
+      artist,
+      language,
+      aliases: this.songAliases()
+        .split(/[\n,]/)
+        .map((alias) => alias.trim())
+        .filter(Boolean),
+      localLyrics: localLyrics || undefined,
+    };
+
+    try {
+      this.catalogSaving.set(true);
+      this.catalogError.set('');
+      const song = await this.api.createSong(payload);
+      this.catalogSongs.update((songs) =>
+        [...songs, song].sort(
+          (left, right) =>
+            left.artist.localeCompare(right.artist) || left.title.localeCompare(right.title),
+        ),
+      );
+      this.songTitle.set('');
+      this.songArtist.set('');
+      this.songAliases.set('');
+      this.songLocalLyrics.set('');
+      this.catalogMessage.set(`Saved ${song.title} by ${song.artist} to the playable catalog.`);
+    } catch (error) {
+      this.catalogError.set((error as Error).message);
+    } finally {
+      this.catalogSaving.set(false);
+    }
+  }
+
   protected trackPlayer(index: number, player: PlayerSnapshot) {
     return `${index}-${player.id}`;
   }
 
+  protected trackSong(index: number, song: SongCatalogItem) {
+    return `${index}-${song.id}`;
+  }
+
   private async applySession(session: { playerId: string; room: RoomSnapshot }) {
     this.playerId.set(session.playerId);
-    this.room.set(session.room);
     this.nickname.set(
       session.room.players.find((player) => player.id === session.playerId)?.nickname ??
         this.nickname(),
     );
     this.joinCode.set(session.room.code);
+    this.syncRoomState(session.room);
     const room = await this.socket.connect(session.room.code, session.playerId);
-    this.room.set(room);
-    this.persistSession();
-    this.syncCountdown(session.room.currentRound);
+    this.syncRoomState(room);
   }
 
   private async restoreSession() {
@@ -253,16 +372,28 @@ export class App {
       this.playerId.set(session.playerId);
 
       const room = await this.api.getRoom(session.roomCode);
-      this.room.set(room);
-      const connectedRoom = await this.socket.connect(session.roomCode, session.playerId);
-      this.room.set(connectedRoom);
-      this.notice.set(`Rejoined room ${session.roomCode}.`);
-      this.syncCountdown(connectedRoom.currentRound);
+      this.syncRoomState(room);
+      const connectedRoom = await this.socket.connect(room.code, session.playerId);
+      this.syncRoomState(connectedRoom);
+      this.notice.set(`Rejoined room ${connectedRoom.code}.`);
     } catch {
       this.clearSession();
       this.room.set(null);
       this.playerId.set(null);
       this.notice.set('Saved session is no longer valid. Create or join a room again.');
+    }
+  }
+
+  private async loadSongs() {
+    try {
+      this.catalogLoading.set(true);
+      this.catalogError.set('');
+      const songs = await this.api.listSongs();
+      this.catalogSongs.set(songs);
+    } catch (error) {
+      this.catalogError.set((error as Error).message);
+    } finally {
+      this.catalogLoading.set(false);
     }
   }
 
@@ -275,6 +406,13 @@ export class App {
     this.countdown.set(
       Math.max(0, Math.ceil((new Date(round.endsAt).getTime() - Date.now()) / 1000)),
     );
+  }
+
+  private syncRoomState(room: RoomSnapshot) {
+    this.room.set(room);
+    this.joinCode.set(room.code);
+    this.syncCountdown(room.currentRound);
+    this.persistSession();
   }
 
   private tickCountdown() {
