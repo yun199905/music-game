@@ -98,7 +98,7 @@ describe('App', () => {
     await fixture.whenStable();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain('Create Flow');
+    expect(compiled.textContent).toContain('Start a new room');
     expect(compiled.textContent).not.toContain('Room Code');
   });
 
@@ -116,7 +116,7 @@ describe('App', () => {
     await fixture.whenStable();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain('Join Flow');
+    expect(compiled.textContent).toContain('Join an existing room');
     expect(compiled.textContent).toContain('Room Code');
   });
 
@@ -217,6 +217,6 @@ describe('App', () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Song maintenance');
-    expect(compiled.textContent).not.toContain('Create Flow');
+    expect(compiled.textContent).not.toContain('Start a new room');
   });
 });

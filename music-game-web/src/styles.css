@@ -1,3 +1,4 @@
+@import '@angular/material/prebuilt-themes/azure-blue.css';
 @import 'tailwindcss';
 
 html,
@@ -9,6 +10,7 @@ body {
   margin: 0;
   font-family: 'Space Grotesk', 'Noto Sans TC', sans-serif;
   background: #f8fafc;
+  color: #0f172a;
 }
 
 * {

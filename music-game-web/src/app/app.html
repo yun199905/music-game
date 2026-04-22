@@ -1,447 +1,211 @@
-<main
-  class="app-shell min-h-screen bg-[radial-gradient(circle_at_top,_#fde68a,_#f8fafc_40%,_#dbeafe_100%)] px-4 py-6 text-slate-900"
-  [attr.data-scene]="scene()"
->
-  <section class="mx-auto flex max-w-6xl flex-col gap-6">
-    <article
-      class="scene-panel rounded-[2rem] border border-white/60 bg-white/80 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur"
-    >
-      <div class="flex items-start justify-between gap-4">
-        <div>
-          <p class="text-xs font-semibold uppercase tracking-[0.3em] text-amber-600">Music Game</p>
-          <h1 class="mt-2 text-3xl font-black leading-tight sm:text-5xl">
-            Multiplayer lyrics guessing for small rooms.
-          </h1>
-        </div>
-
-        <div class="relative">
-          <button
-            class="menu-toggle action-button text-slate-900"
-            type="button"
-            aria-label="Open navigation menu"
-            (click)="toggleMenu()"
-          >
-            <span class="menu-toggle__icon">
-              <span></span>
-              <span></span>
-              <span></span>
-            </span>
-          </button>
-
-          @if (menuOpen()) {
-            <div
-              class="menu-popover absolute right-0 z-10 mt-3 min-w-64 rounded-[1.5rem] border border-slate-200 bg-white p-3 shadow-[0_24px_80px_rgba(15,23,42,0.16)]"
-            >
-              @if (!room()) {
-                <button
-                  class="menu-item w-full rounded-2xl px-4 py-3 text-left text-sm font-bold"
-                  [class.is-active]="activeView() === 'game' && entryMode() === 'create'"
-                  type="button"
-                  (click)="openLandingView('create')"
-                >
-                  Create Room
-                </button>
-                <button
-                  class="menu-item mt-2 w-full rounded-2xl px-4 py-3 text-left text-sm font-bold"
-                  [class.is-active]="activeView() === 'game' && entryMode() === 'join'"
-                  type="button"
-                  (click)="openLandingView('join')"
-                >
-                  Join Room
-                </button>
-                <button
-                  class="menu-item mt-2 w-full rounded-2xl px-4 py-3 text-left text-sm font-bold"
-                  [class.is-active]="activeView() === 'catalog'"
-                  type="button"
-                  (click)="openLandingView('catalog')"
-                >
-                  Song maintenance
-                </button>
-              } @else {
-                <button
-                  class="menu-item w-full rounded-2xl px-4 py-3 text-left text-sm font-bold"
-                  [class.is-active]="activeView() === 'game'"
-                  type="button"
-                  (click)="openView('game')"
-                >
-                  Gameplay
-                </button>
-                <button
-                  class="menu-item mt-2 w-full rounded-2xl px-4 py-3 text-left text-sm font-bold"
-                  [class.is-active]="activeView() === 'ranking'"
-                  type="button"
-                  (click)="openView('ranking')"
-                >
-                  Live room ranking
-                </button>
-                <button
-                  class="menu-item mt-2 w-full rounded-2xl px-4 py-3 text-left text-sm font-bold"
-                  [class.is-active]="activeView() === 'catalog'"
-                  type="button"
-                  (click)="openView('catalog')"
-                >
-                  Song maintenance
-                </button>
-              }
-            </div>
-          }
-        </div>
+<main class="app-shell" [attr.data-scene]="scene()">
+  <section class="app-shell__inner">
+    <mat-toolbar class="hero-toolbar">
+      <div class="hero-toolbar__copy">
+        <span class="hero-toolbar__eyebrow">Music Game</span>
+        <h1>Multiplayer lyrics guessing for small rooms.</h1>
       </div>
 
-      <p class="mt-4 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-        Mobile-first party room with live score sync, scrolling lyrics, hidden song titles, and
-        host-controlled rounds.
-      </p>
+      <button
+        mat-icon-button
+        class="nav-trigger"
+        type="button"
+        aria-label="Open navigation menu"
+        [matMenuTriggerFor]="navigationMenu"
+      >
+        <mat-icon>menu</mat-icon>
+      </button>
+    </mat-toolbar>
 
-      @if (!room() && activeView() === 'game') {
-        <div class="mt-6 rounded-[2rem] border border-slate-200 bg-white/75 p-5">
-          <div class="entry-switch flex flex-wrap gap-2">
-            <button
-              class="entry-switch__button rounded-full px-4 py-2 text-sm font-bold"
-              [class.is-active]="entryMode() === 'create'"
-              type="button"
-              (click)="setEntryMode('create')"
-            >
-              Create Room
-            </button>
-            <button
-              class="entry-switch__button rounded-full px-4 py-2 text-sm font-bold"
-              [class.is-active]="entryMode() === 'join'"
-              type="button"
-              (click)="setEntryMode('join')"
-            >
-              Join Room
-            </button>
-          </div>
-
-          <div class="mt-4">
-            <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
-              {{ entryMode() === 'create' ? 'Create Flow' : 'Join Flow' }}
-            </p>
-            <h2 class="mt-2 text-2xl font-black text-slate-950">
-              {{ entryMode() === 'create' ? 'Start a new room' : 'Join an existing room' }}
-            </h2>
-
-            <div class="mt-6 grid gap-3 sm:grid-cols-2">
-              <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4 sm:col-span-2">
-                <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
-                  >Nickname</span
-                >
-                <input
-                  class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
-                  [ngModel]="nickname()"
-                  (ngModelChange)="updateField('nickname', $event)"
-                  maxlength="20"
-                  placeholder="DJ Cat"
-                />
-              </label>
-
-              @if (entryMode() === 'join') {
-                <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4 sm:col-span-2">
-                  <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
-                    >Room Code</span
-                  >
-                  <input
-                    class="mt-2 w-full bg-transparent text-lg font-semibold uppercase outline-none"
-                    [ngModel]="joinCode()"
-                    (ngModelChange)="updateField('joinCode', $event)"
-                    maxlength="5"
-                    placeholder="AB12C"
-                  />
-                </label>
-              }
-
-              @if (entryMode() === 'create') {
-                <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                  <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
-                    >Rounds</span
-                  >
-                  <input
-                    class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
-                    type="number"
-                    min="1"
-                    max="10"
-                    [ngModel]="totalRounds()"
-                    (ngModelChange)="totalRounds.set(+$event || 5)"
-                  />
-                </label>
-
-                <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                  <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
-                    >Seconds / Round</span
-                  >
-                  <input
-                    class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
-                    type="number"
-                    min="15"
-                    max="45"
-                    [ngModel]="roundDurationSeconds()"
-                    (ngModelChange)="roundDurationSeconds.set(+$event || 30)"
-                  />
-                </label>
-              }
-            </div>
-
-            <div class="mt-6 flex flex-col gap-3 sm:flex-row">
-              @if (entryMode() === 'create') {
-                <button
-                  class="action-button action-button--primary rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
-                  (click)="createRoom()"
-                >
-                  Create Room
-                </button>
-              } @else {
-                <button
-                  class="action-button action-button--primary rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
-                  (click)="joinRoom()"
-                >
-                  Join Room
-                </button>
-              }
-            </div>
-          </div>
-        </div>
+    <mat-menu #navigationMenu="matMenu" xPosition="before">
+      @if (!room()) {
+        <button mat-menu-item type="button" (click)="openLandingView('create')">
+          <mat-icon>add_circle</mat-icon>
+          <span>Create Room</span>
+        </button>
+        <button mat-menu-item type="button" (click)="openLandingView('join')">
+          <mat-icon>meeting_room</mat-icon>
+          <span>Join Room</span>
+        </button>
+        <button mat-menu-item type="button" (click)="openLandingView('catalog')">
+          <mat-icon>library_music</mat-icon>
+          <span>Song maintenance</span>
+        </button>
+      } @else {
+        <button mat-menu-item type="button" (click)="openView('game')">
+          <mat-icon>graphic_eq</mat-icon>
+          <span>Gameplay</span>
+        </button>
+        <button mat-menu-item type="button" (click)="openView('ranking')">
+          <mat-icon>leaderboard</mat-icon>
+          <span>Live room ranking</span>
+        </button>
+        <button mat-menu-item type="button" (click)="openView('catalog')">
+          <mat-icon>library_music</mat-icon>
+          <span>Song maintenance</span>
+        </button>
       }
+    </mat-menu>
 
-      @if (!room() && activeView() === 'catalog') {
-        <section
-          class="catalog-panel mt-6 rounded-[2rem] border border-slate-200 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)]"
-        >
-          <div class="flex items-center justify-between gap-3">
-            <div>
-              <p class="text-xs font-semibold uppercase tracking-[0.25em] text-sky-600">
-                Catalog Studio
-              </p>
-              <h2 class="mt-2 text-2xl font-black">Song maintenance</h2>
-            </div>
-            <button
-              class="action-button action-button--secondary rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-900"
-              (click)="toggleCatalog()"
-            >
-              {{ catalogOpen() ? 'Collapse' : 'Open' }}
-            </button>
-          </div>
+    <mat-card class="hero-card scene-panel">
+      <mat-card-content>
+        <p class="hero-card__description">
+          Mobile-first party room with live score sync, scrolling lyrics, hidden song titles, and
+          host-controlled rounds.
+        </p>
 
-          <p class="mt-3 text-sm leading-6 text-slate-600">
-            Add playable songs without changing code. Chinese songs should include local lyrics so
-            rounds stay stable even when the external provider cannot resolve them.
-          </p>
+        <div class="notice-stack">
+          <mat-card class="notice-card">
+            <mat-card-subtitle>Session notice</mat-card-subtitle>
+            <mat-card-content>{{ notice() }}</mat-card-content>
+          </mat-card>
 
-          @if (catalogOpen()) {
-            <div class="mt-5 grid gap-4">
-              <div class="grid gap-3 sm:grid-cols-2">
-                <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                  <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
-                    >Song Title</span
-                  >
-                  <input
-                    class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
-                    [ngModel]="songTitle()"
-                    (ngModelChange)="updateSongField('title', $event)"
-                    placeholder="晴天"
-                  />
-                </label>
-
-                <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                  <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
-                    >Artist</span
-                  >
-                  <input
-                    class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
-                    [ngModel]="songArtist()"
-                    (ngModelChange)="updateSongField('artist', $event)"
-                    placeholder="周杰倫"
-                  />
-                </label>
-              </div>
-
-              <div class="grid gap-3 sm:grid-cols-[0.6fr_1.4fr]">
-                <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                  <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
-                    >Language</span
-                  >
-                  <select
-                    class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
-                    [ngModel]="songLanguage()"
-                    (ngModelChange)="updateSongField('language', $event)"
-                  >
-                    <option value="en">English</option>
-                    <option value="zh-TW">繁體中文</option>
-                    <option value="zh-CN">简体中文</option>
-                  </select>
-                </label>
-
-                <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                  <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
-                    >Aliases</span
-                  >
-                  <input
-                    class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
-                    [ngModel]="songAliases()"
-                    (ngModelChange)="updateSongField('aliases', $event)"
-                    placeholder="天晴, Sunny Day"
-                  />
-                </label>
-              </div>
-
-              <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
-                  >Local Lyrics</span
-                >
-                <textarea
-                  class="mt-2 min-h-32 w-full resize-y bg-transparent text-base font-medium leading-7 outline-none"
-                  [ngModel]="songLocalLyrics()"
-                  (ngModelChange)="updateSongField('localLyrics', $event)"
-                  placeholder="Paste playable fallback lyrics here. Chinese songs require this field."
-                ></textarea>
-              </label>
-
-              <div class="flex flex-wrap gap-3">
-                <button
-                  class="action-button action-button--primary rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white"
-                  [disabled]="catalogSaving()"
-                  (click)="submitSong()"
-                >
-                  {{ catalogSaving() ? 'Saving...' : 'Add Song' }}
-                </button>
-                <div
-                  class="rounded-full bg-slate-100 px-4 py-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-500"
-                >
-                  {{ catalogSongs().length }} songs loaded
-                </div>
-              </div>
-
-              <div
-                class="rounded-3xl border border-slate-200 bg-slate-50/70 p-4 text-sm text-slate-600"
-              >
-                {{ catalogMessage() }}
-              </div>
-
-              @if (catalogError()) {
-                <div
-                  class="rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700"
-                >
-                  {{ catalogError() }}
-                </div>
-              }
-
-              <div
-                class="catalog-list rounded-[1.75rem] border border-slate-200 bg-slate-950/95 p-4 text-white"
-              >
-                <div class="flex items-center justify-between gap-3">
-                  <div class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">
-                    Playable songs
-                  </div>
-                  @if (catalogLoading()) {
-                    <div class="text-xs uppercase tracking-[0.25em] text-slate-500">Loading</div>
-                  }
-                </div>
-
-                @if (catalogSongs().length) {
-                  <div class="mt-4 grid gap-3">
-                    @for (song of catalogSongs(); track trackSong($index, song)) {
-                      <article class="rounded-3xl border border-white/10 bg-white/5 p-4">
-                        <div class="flex flex-wrap items-center gap-2">
-                          <h3 class="text-lg font-black">{{ song.title }}</h3>
-                          <span
-                            class="rounded-full bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-sky-200"
-                          >
-                            {{ song.language }}
-                          </span>
-                          @if (song.localLyrics) {
-                            <span
-                              class="rounded-full bg-emerald-400/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-200"
-                            >
-                              local lyrics
-                            </span>
-                          }
-                        </div>
-                        <p class="mt-2 text-sm text-slate-300">{{ song.artist }}</p>
-                        @if (song.aliases?.length) {
-                          <p class="mt-3 text-xs uppercase tracking-[0.18em] text-slate-400">
-                            Aliases: {{ song.aliases?.join(', ') }}
-                          </p>
-                        }
-                      </article>
-                    }
-                  </div>
-                } @else {
-                  <p class="mt-4 text-sm text-slate-400">No songs are loaded yet.</p>
-                }
-              </div>
-            </div>
+          @if (errorMessage()) {
+            <mat-card class="notice-card notice-card--error">
+              <mat-card-subtitle>Action blocked</mat-card-subtitle>
+              <mat-card-content>{{ errorMessage() }}</mat-card-content>
+            </mat-card>
           }
-        </section>
-      }
+        </div>
+      </mat-card-content>
+    </mat-card>
 
-      @if (room(); as activeRoom) {
-        <div class="mt-6 flex flex-col gap-3">
-          <div
-            class="room-share-panel rounded-[1.75rem] border border-slate-900 bg-slate-950 p-5 text-white"
+    @if (!room() && activeView() === 'game') {
+      <mat-card class="entry-card scene-panel">
+        <mat-card-header>
+          <mat-card-subtitle>{{
+            entryMode() === 'create' ? 'Room setup' : 'Room access'
+          }}</mat-card-subtitle>
+          <mat-card-title>{{
+            entryMode() === 'create' ? 'Start a new room' : 'Join an existing room'
+          }}</mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+          <mat-button-toggle-group
+            class="entry-toggle"
+            name="entry-mode"
+            [value]="entryMode()"
+            (change)="setEntryMode($event.value)"
           >
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <mat-button-toggle value="create">Create Room</mat-button-toggle>
+            <mat-button-toggle value="join">Join Room</mat-button-toggle>
+          </mat-button-toggle-group>
+
+          <div class="form-grid form-grid--entry">
+            <mat-form-field appearance="outline" class="form-grid__full">
+              <mat-label>Nickname</mat-label>
+              <input
+                matInput
+                [ngModel]="nickname()"
+                (ngModelChange)="updateField('nickname', $event)"
+                maxlength="20"
+                placeholder="DJ Cat"
+              />
+            </mat-form-field>
+
+            @if (entryMode() === 'join') {
+              <mat-form-field appearance="outline" class="form-grid__full">
+                <mat-label>Room Code</mat-label>
+                <input
+                  matInput
+                  [ngModel]="joinCode()"
+                  (ngModelChange)="updateField('joinCode', $event)"
+                  maxlength="5"
+                  placeholder="AB12C"
+                />
+              </mat-form-field>
+            }
+
+            @if (entryMode() === 'create') {
+              <mat-form-field appearance="outline">
+                <mat-label>Rounds</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  min="1"
+                  max="10"
+                  [ngModel]="totalRounds()"
+                  (ngModelChange)="totalRounds.set(+$event || 5)"
+                />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Seconds / Round</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  min="15"
+                  max="45"
+                  [ngModel]="roundDurationSeconds()"
+                  (ngModelChange)="roundDurationSeconds.set(+$event || 30)"
+                />
+              </mat-form-field>
+            }
+          </div>
+
+          <div class="action-row">
+            @if (entryMode() === 'create') {
+              <button mat-flat-button type="button" color="primary" (click)="createRoom()">
+                Create Room
+              </button>
+            } @else {
+              <button mat-flat-button type="button" color="primary" (click)="joinRoom()">
+                Join Room
+              </button>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    @if (room(); as activeRoom) {
+      <div class="room-shell">
+        <mat-card class="room-share-card scene-panel">
+          <mat-card-content>
+            <div class="room-share-card__layout">
               <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                  Room Code
-                </p>
-                <div class="mt-2 text-4xl font-black tracking-[0.24em] sm:text-5xl">
-                  {{ canonicalRoomCode() }}
-                </div>
+                <div class="room-share-card__label">Room Code</div>
+                <div class="room-share-card__code">{{ canonicalRoomCode() }}</div>
               </div>
-              <div class="flex flex-wrap items-center gap-3">
-                <button
-                  class="copy-button action-button rounded-full border border-white/15 bg-white/10 px-4 py-3 text-sm font-bold text-white"
-                  type="button"
-                  aria-label="Copy room code"
-                  (click)="copyRoomCode()"
-                >
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <rect x="9" y="9" width="10" height="10" rx="2"></rect>
-                    <path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
 
-          <div
-            class="status-strip flex flex-wrap items-center gap-3 rounded-3xl border border-slate-200 bg-slate-50/80 p-4"
-          >
-            <div>
-              <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Status</p>
-              <p class="mt-1 text-xl font-black capitalize">
-                {{ activeRoom.status.replace('_', ' ') }}
-              </p>
-            </div>
-            <div class="ml-auto text-right">
-              <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
-                Countdown
-              </p>
-              <p class="mt-1 text-4xl font-black text-rose-600">{{ countdown() }}</p>
-            </div>
-          </div>
-
-          @if (activeView() === 'game') {
-            <div
-              class="lyrics-stage rounded-[2rem] border border-slate-200 bg-slate-950 p-5 text-white"
-              [class.is-active]="activeRoom.phase === 'guessing'"
-            >
-              <div
-                class="flex items-center justify-between text-xs uppercase tracking-[0.25em] text-slate-400"
+              <button
+                mat-icon-button
+                type="button"
+                aria-label="Copy room code"
+                matTooltip="Copy room code"
+                (click)="copyRoomCode()"
               >
+                <mat-icon>content_copy</mat-icon>
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <div class="stats-grid">
+          <mat-card class="stat-card">
+            <mat-card-subtitle>Status</mat-card-subtitle>
+            <mat-card-title>{{ activeRoom.status.replace('_', ' ') }}</mat-card-title>
+          </mat-card>
+
+          <mat-card class="stat-card">
+            <mat-card-subtitle>Countdown</mat-card-subtitle>
+            <mat-card-title>{{ countdown() }}</mat-card-title>
+          </mat-card>
+        </div>
+
+        @if (activeView() === 'game') {
+          <mat-card
+            class="lyrics-card scene-panel"
+            [class.is-active]="activeRoom.phase === 'guessing'"
+          >
+            <mat-card-content>
+              <div class="lyrics-card__meta">
                 <span>Round {{ activeRoom.currentRoundIndex }} / {{ activeRoom.totalRounds }}</span>
                 <span>{{ activeRoom.phase }}</span>
               </div>
 
-              <div class="mt-4 h-[18rem] overflow-hidden sm:h-[24rem]">
+              <div class="lyrics-card__viewport">
                 <div
                   class="lyrics-flow"
                   [style.--scroll-duration]="lyricDuration()"
@@ -450,351 +214,257 @@
                   "
                 >
                   @for (line of lyricLines(); track $index) {
-                    <p class="py-2 text-xl font-semibold leading-relaxed sm:text-2xl">
-                      {{ line }}
-                    </p>
+                    <p>{{ line }}</p>
                   }
                 </div>
               </div>
 
               @if (!currentRound()) {
-                <div class="mt-4 rounded-3xl bg-white/10 p-4 text-sm leading-6 text-slate-200">
-                  Waiting for the host to start the first round.
-                </div>
+                <div class="inline-message">Waiting for the host to start the first round.</div>
               }
 
               @if (currentRound()?.phase === 'revealed') {
-                <div
-                  class="mt-4 rounded-3xl bg-emerald-400/15 p-4 text-sm leading-6 text-emerald-100"
-                >
+                <div class="inline-message inline-message--success">
                   Answer: {{ currentRound()?.revealTitle }} · {{ currentRound()?.revealArtist }}
                 </div>
               }
-            </div>
+            </mat-card-content>
+          </mat-card>
 
-            <div class="grid gap-3 sm:grid-cols-[1fr_auto]">
-              <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
-                  >Your Guess</span
-                >
-                <input
-                  class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
-                  [disabled]="activeRoom.phase !== 'guessing' || hasSubmittedCorrectAnswer()"
-                  [ngModel]="answer()"
-                  (ngModelChange)="updateField('answer', $event)"
-                  (keyup.enter)="submitGuess()"
-                  placeholder="Song title"
-                />
-              </label>
+          <div class="guess-layout">
+            <mat-card class="guess-card">
+              <mat-card-content>
+                <mat-form-field appearance="outline" class="guess-field">
+                  <mat-label>Your Guess</mat-label>
+                  <input
+                    matInput
+                    [disabled]="activeRoom.phase !== 'guessing' || hasSubmittedCorrectAnswer()"
+                    [ngModel]="answer()"
+                    (ngModelChange)="updateField('answer', $event)"
+                    (keyup.enter)="submitGuess()"
+                    placeholder="Song title"
+                  />
+                </mat-form-field>
+              </mat-card-content>
+            </mat-card>
 
-              <button
-                class="action-button action-button--accent rounded-full bg-amber-400 px-6 py-3 text-sm font-black text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:bg-slate-200"
-                [disabled]="activeRoom.phase !== 'guessing' || hasSubmittedCorrectAnswer()"
-                (click)="submitGuess()"
-              >
-                Submit
-              </button>
-            </div>
-
-            <div class="flex flex-wrap gap-3">
-              <button
-                class="action-button action-button--primary rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
-                [disabled]="!canStart() || activeRoom.status !== 'lobby'"
-                (click)="startGame()"
-              >
-                Start Game
-              </button>
-
-              <button
-                class="action-button action-button--secondary rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-900 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
-                [disabled]="
-                  !isHost() || activeRoom.phase !== 'revealed' || activeRoom.status === 'finished'
-                "
-                (click)="nextRound()"
-              >
-                Next Round
-              </button>
-
-              <button
-                class="action-button action-button--danger rounded-full border border-rose-200 bg-rose-50 px-6 py-3 text-sm font-bold text-rose-700"
-                (click)="leaveRoom()"
-              >
-                Leave Room
-              </button>
-            </div>
-
-            <section
-              class="scene-panel rounded-[2rem] border border-slate-200 bg-slate-950 p-5 text-white shadow-[0_24px_80px_rgba(15,23,42,0.12)]"
+            <button
+              mat-flat-button
+              type="button"
+              color="primary"
+              class="submit-button"
+              [disabled]="activeRoom.phase !== 'guessing' || hasSubmittedCorrectAnswer()"
+              (click)="submitGuess()"
             >
-              <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">
-                Round insight
-              </p>
-              <h2 class="mt-2 text-2xl font-black">What is happening now</h2>
+              Submit
+            </button>
+          </div>
 
-              <div class="mt-4 space-y-3 text-sm text-slate-300">
-                <p>
-                  Mode: Host controls start and next round. New players can only join before the
-                  game starts.
-                </p>
-                <p>Scoring: 100 base points plus remaining seconds when your answer is accepted.</p>
-                @if (winner(); as roundWinner) {
-                  <p>First correct answer this round: {{ roundWinner.nickname }}</p>
-                } @else {
-                  <p>No correct answer has been locked for this round yet.</p>
-                }
-              </div>
-            </section>
-          }
-
-          @if (activeView() === 'ranking') {
-            <section
-              class="scene-panel rounded-[2rem] border border-slate-200 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)]"
+          <div class="action-row">
+            <button
+              mat-flat-button
+              type="button"
+              color="primary"
+              [disabled]="!canStart() || activeRoom.status !== 'lobby'"
+              (click)="startGame()"
             >
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
-                    Leaderboard
-                  </p>
-                  <h2 class="mt-2 text-2xl font-black">Live room ranking</h2>
-                </div>
-                @if (currentPlayer(); as me) {
-                  <div class="rounded-full bg-slate-950 px-3 py-2 text-xs font-bold text-white">
-                    You: {{ me.score }}
-                  </div>
-                }
-              </div>
+              Start Game
+            </button>
 
-              @if (leaderboard().length) {
-                <div class="mt-4 space-y-3">
-                  @for (player of leaderboard(); track trackPlayer($index, player)) {
-                    <div
-                      class="flex items-center gap-3 rounded-3xl border border-slate-100 bg-slate-50 p-4"
-                    >
-                      <div
-                        class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-300 text-lg font-black text-slate-950"
-                      >
-                        {{ player.nickname.slice(0, 1).toUpperCase() }}
-                      </div>
-                      <div class="min-w-0 flex-1">
-                        <div class="truncate text-base font-black text-slate-900">
-                          {{ player.nickname }}
-                          @if (player.isHost) {
-                            <span
-                              class="ml-2 rounded-full bg-slate-900 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-white"
-                            >
-                              Host
-                            </span>
-                          }
-                        </div>
-                        <div
-                          class="text-xs uppercase tracking-[0.25em]"
-                          [class.text-emerald-600]="player.connected"
-                          [class.text-slate-400]="!player.connected"
-                        >
-                          {{ player.connected ? 'Online' : 'Offline' }}
-                        </div>
-                      </div>
-                      <div class="text-right">
-                        <div class="text-xs uppercase tracking-[0.25em] text-slate-400">Score</div>
-                        <div class="text-2xl font-black text-slate-950">{{ player.score }}</div>
-                      </div>
-                    </div>
-                  }
-                </div>
-              } @else {
-                <p class="mt-4 text-sm text-slate-500">
-                  Players will appear here after joining a room.
-                </p>
-              }
-            </section>
-          }
-
-          @if (activeView() === 'catalog') {
-            <section
-              class="catalog-panel scene-panel rounded-[2rem] border border-slate-200 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)]"
+            <button
+              mat-stroked-button
+              type="button"
+              [disabled]="
+                !isHost() || activeRoom.phase !== 'revealed' || activeRoom.status === 'finished'
+              "
+              (click)="nextRound()"
             >
-              <div class="flex items-center justify-between gap-3">
-                <div>
-                  <p class="text-xs font-semibold uppercase tracking-[0.25em] text-sky-600">
-                    Catalog Studio
-                  </p>
-                  <h2 class="mt-2 text-2xl font-black">Song maintenance</h2>
-                </div>
-                <button
-                  class="action-button action-button--secondary rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-900"
-                  (click)="toggleCatalog()"
-                >
-                  {{ catalogOpen() ? 'Collapse' : 'Open' }}
-                </button>
-              </div>
+              Next Round
+            </button>
 
-              <p class="mt-3 text-sm leading-6 text-slate-600">
-                Add playable songs without changing code. Chinese songs should include local lyrics
-                so rounds stay stable even when the external provider cannot resolve them.
-              </p>
+            <button mat-stroked-button type="button" class="warn-button" (click)="leaveRoom()">
+              Leave Room
+            </button>
+          </div>
+        }
 
-              @if (catalogOpen()) {
-                <div class="mt-5 grid gap-4">
-                  <div class="grid gap-3 sm:grid-cols-2">
-                    <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                      <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
-                        >Song Title</span
-                      >
-                      <input
-                        class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
-                        [ngModel]="songTitle()"
-                        (ngModelChange)="updateSongField('title', $event)"
-                        placeholder="晴天"
-                      />
-                    </label>
+        @if (activeView() === 'ranking') {
+          <mat-card class="ranking-card scene-panel">
+            <mat-card-header>
+              <mat-card-subtitle>Leaderboard</mat-card-subtitle>
+              <mat-card-title>Live room ranking</mat-card-title>
+            </mat-card-header>
 
-                    <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                      <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
-                        >Artist</span
-                      >
-                      <input
-                        class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
-                        [ngModel]="songArtist()"
-                        (ngModelChange)="updateSongField('artist', $event)"
-                        placeholder="周杰倫"
-                      />
-                    </label>
-                  </div>
-
-                  <div class="grid gap-3 sm:grid-cols-[0.6fr_1.4fr]">
-                    <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                      <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
-                        >Language</span
-                      >
-                      <select
-                        class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
-                        [ngModel]="songLanguage()"
-                        (ngModelChange)="updateSongField('language', $event)"
-                      >
-                        <option value="en">English</option>
-                        <option value="zh-TW">繁體中文</option>
-                        <option value="zh-CN">简体中文</option>
-                      </select>
-                    </label>
-
-                    <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                      <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
-                        >Aliases</span
-                      >
-                      <input
-                        class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
-                        [ngModel]="songAliases()"
-                        (ngModelChange)="updateSongField('aliases', $event)"
-                        placeholder="天晴, Sunny Day"
-                      />
-                    </label>
-                  </div>
-
-                  <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                    <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
-                      >Local Lyrics</span
-                    >
-                    <textarea
-                      class="mt-2 min-h-32 w-full resize-y bg-transparent text-base font-medium leading-7 outline-none"
-                      [ngModel]="songLocalLyrics()"
-                      (ngModelChange)="updateSongField('localLyrics', $event)"
-                      placeholder="Paste playable fallback lyrics here. Chinese songs require this field."
-                    ></textarea>
-                  </label>
-
-                  <div class="flex flex-wrap gap-3">
-                    <button
-                      class="action-button action-button--primary rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white"
-                      [disabled]="catalogSaving()"
-                      (click)="submitSong()"
-                    >
-                      {{ catalogSaving() ? 'Saving...' : 'Add Song' }}
-                    </button>
-                    <div
-                      class="rounded-full bg-slate-100 px-4 py-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-500"
-                    >
-                      {{ catalogSongs().length }} songs loaded
-                    </div>
-                  </div>
-
-                  <div
-                    class="rounded-3xl border border-slate-200 bg-slate-50/70 p-4 text-sm text-slate-600"
-                  >
-                    {{ catalogMessage() }}
-                  </div>
-
-                  @if (catalogError()) {
-                    <div
-                      class="rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700"
-                    >
-                      {{ catalogError() }}
-                    </div>
-                  }
-
-                  <div
-                    class="catalog-list rounded-[1.75rem] border border-slate-200 bg-slate-950/95 p-4 text-white"
-                  >
-                    <div class="flex items-center justify-between gap-3">
-                      <div class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">
-                        Playable songs
-                      </div>
-                      @if (catalogLoading()) {
-                        <div class="text-xs uppercase tracking-[0.25em] text-slate-500">
-                          Loading
-                        </div>
+            <mat-card-content class="ranking-list">
+              @for (player of leaderboard(); track trackPlayer($index, player)) {
+                <div class="ranking-row">
+                  <div>
+                    <div class="ranking-row__name">
+                      {{ player.nickname }}
+                      @if (player.isHost) {
+                        <mat-chip>Host</mat-chip>
                       }
                     </div>
-
-                    @if (catalogSongs().length) {
-                      <div class="mt-4 grid gap-3">
-                        @for (song of catalogSongs(); track trackSong($index, song)) {
-                          <article class="rounded-3xl border border-white/10 bg-white/5 p-4">
-                            <div class="flex flex-wrap items-center gap-2">
-                              <h3 class="text-lg font-black">{{ song.title }}</h3>
-                              <span
-                                class="rounded-full bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-sky-200"
-                              >
-                                {{ song.language }}
-                              </span>
-                              @if (song.localLyrics) {
-                                <span
-                                  class="rounded-full bg-emerald-400/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-200"
-                                >
-                                  local lyrics
-                                </span>
-                              }
-                            </div>
-                            <p class="mt-2 text-sm text-slate-300">{{ song.artist }}</p>
-                            @if (song.aliases?.length) {
-                              <p class="mt-3 text-xs uppercase tracking-[0.18em] text-slate-400">
-                                Aliases: {{ song.aliases?.join(', ') }}
-                              </p>
-                            }
-                          </article>
-                        }
-                      </div>
-                    } @else {
-                      <p class="mt-4 text-sm text-slate-400">No songs are loaded yet.</p>
-                    }
+                    <div class="ranking-row__meta">
+                      {{ player.connected ? 'Connected' : 'Disconnected' }}
+                    </div>
                   </div>
+                  <div class="ranking-row__score">{{ player.score }}</div>
                 </div>
               }
-            </section>
-          }
-        </div>
-      }
+            </mat-card-content>
+          </mat-card>
+        }
 
-      <div
-        class="mt-6 rounded-3xl border border-slate-200 bg-slate-50/70 p-4 text-sm text-slate-600"
-      >
-        {{ notice() }}
+        @if (activeView() === 'catalog') {
+          <ng-container [ngTemplateOutlet]="catalogPanel"></ng-container>
+        }
       </div>
+    }
 
-      @if (errorMessage()) {
-        <div class="mt-4 rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-          {{ errorMessage() }}
-        </div>
-      }
-    </article>
+    @if (!room() && activeView() === 'catalog') {
+      <ng-container [ngTemplateOutlet]="catalogPanel"></ng-container>
+    }
   </section>
+  <ng-template #catalogPanel>
+    <mat-card class="catalog-card scene-panel">
+      <mat-card-header>
+        <mat-card-subtitle>Catalog Studio</mat-card-subtitle>
+        <mat-card-title>Song maintenance</mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="catalog-header">
+          <p>
+            Add playable songs without changing code. Chinese songs should include local lyrics so
+            rounds stay stable even when the external provider cannot resolve them.
+          </p>
+          <button mat-stroked-button type="button" (click)="toggleCatalog()">
+            {{ catalogOpen() ? 'Collapse' : 'Open' }}
+          </button>
+        </div>
+
+        @if (catalogOpen()) {
+          <div class="form-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Song Title</mat-label>
+              <input
+                matInput
+                [ngModel]="songTitle()"
+                (ngModelChange)="updateSongField('title', $event)"
+                placeholder="晴天"
+              />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Artist</mat-label>
+              <input
+                matInput
+                [ngModel]="songArtist()"
+                (ngModelChange)="updateSongField('artist', $event)"
+                placeholder="周杰倫"
+              />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Language</mat-label>
+              <mat-select
+                [ngModel]="songLanguage()"
+                (ngModelChange)="updateSongField('language', $event)"
+              >
+                <mat-option value="en">English</mat-option>
+                <mat-option value="zh-TW">繁體中文</mat-option>
+                <mat-option value="zh-CN">简体中文</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Aliases</mat-label>
+              <input
+                matInput
+                [ngModel]="songAliases()"
+                (ngModelChange)="updateSongField('aliases', $event)"
+                placeholder="天晴, Sunny Day"
+              />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-grid__full">
+              <mat-label>Local Lyrics</mat-label>
+              <textarea
+                matInput
+                [ngModel]="songLocalLyrics()"
+                (ngModelChange)="updateSongField('localLyrics', $event)"
+                placeholder="Paste playable fallback lyrics here. Chinese songs require this field."
+                rows="6"
+              ></textarea>
+            </mat-form-field>
+          </div>
+
+          <div class="action-row action-row--catalog">
+            <button
+              mat-flat-button
+              type="button"
+              color="primary"
+              [disabled]="catalogSaving()"
+              (click)="submitSong()"
+            >
+              {{ catalogSaving() ? 'Saving...' : 'Add Song' }}
+            </button>
+            <mat-chip-set>
+              <mat-chip>{{ catalogSongs().length }} songs loaded</mat-chip>
+            </mat-chip-set>
+          </div>
+
+          <mat-card class="notice-card catalog-status-card">
+            <mat-card-content>{{ catalogMessage() }}</mat-card-content>
+          </mat-card>
+
+          @if (catalogError()) {
+            <mat-card class="notice-card notice-card--error">
+              <mat-card-content>{{ catalogError() }}</mat-card-content>
+            </mat-card>
+          }
+
+          <mat-divider></mat-divider>
+
+          <div class="catalog-list">
+            <div class="catalog-list__head">
+              <span>Playable songs</span>
+              @if (catalogLoading()) {
+                <span>Loading</span>
+              }
+            </div>
+
+            @if (catalogSongs().length) {
+              <div class="catalog-list__grid">
+                @for (song of catalogSongs(); track trackSong($index, song)) {
+                  <mat-card class="catalog-song-card">
+                    <mat-card-content>
+                      <div class="catalog-song-card__title">
+                        <h3>{{ song.title }}</h3>
+                        <mat-chip-set>
+                          <mat-chip>{{ song.language }}</mat-chip>
+                          @if (song.localLyrics) {
+                            <mat-chip>local lyrics</mat-chip>
+                          }
+                        </mat-chip-set>
+                      </div>
+                      <p>{{ song.artist }}</p>
+                      @if (song.aliases?.length) {
+                        <div class="catalog-song-card__aliases">
+                          Aliases: {{ song.aliases?.join(', ') }}
+                        </div>
+                      }
+                    </mat-card-content>
+                  </mat-card>
+                }
+              </div>
+            } @else {
+              <p class="catalog-list__empty">No songs are loaded yet.</p>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  </ng-template>
 </main>
