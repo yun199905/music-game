@@ -100,6 +100,7 @@ describe('App', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Create Flow');
     expect(compiled.textContent).not.toContain('Room Code');
+    expect(compiled.textContent).toContain('Menu');
   });
 
   it('shows the room code input after switching to join mode', async () => {
@@ -203,5 +204,20 @@ describe('App', () => {
     compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Song maintenance');
     expect(compiled.textContent).not.toContain('Live room ranking');
+  });
+
+  it('opens song maintenance from the homepage menu before joining a room', async () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance as unknown as {
+      openLandingView: (mode: 'create' | 'join' | 'catalog') => void;
+    };
+
+    app.openLandingView('catalog');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain('Song maintenance');
+    expect(compiled.textContent).not.toContain('Create Flow');
   });
 });

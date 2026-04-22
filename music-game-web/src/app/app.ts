@@ -199,6 +199,8 @@ export class App {
 
   protected setEntryMode(mode: 'create' | 'join') {
     this.entryMode.set(mode);
+    this.activeView.set('game');
+    this.menuOpen.set(false);
     this.errorMessage.set('');
   }
 
@@ -209,6 +211,17 @@ export class App {
   protected openView(view: 'game' | 'ranking' | 'catalog') {
     this.activeView.set(view);
     this.menuOpen.set(false);
+  }
+
+  protected openLandingView(mode: 'create' | 'join' | 'catalog') {
+    if (mode === 'catalog') {
+      this.activeView.set('catalog');
+    } else {
+      this.entryMode.set(mode);
+      this.activeView.set('game');
+    }
+    this.menuOpen.set(false);
+    this.errorMessage.set('');
   }
 
   protected async createRoom() {
