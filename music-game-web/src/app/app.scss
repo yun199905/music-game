@@ -39,9 +39,24 @@
   box-shadow: 0 28px 90px rgba(15, 23, 42, 0.12);
 }
 
-.room-badge,
-.status-pill {
-  animation: chip-enter 360ms ease both;
+.entry-mode-grid {
+  align-items: start;
+}
+
+.mode-card {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  transition:
+    border-color 220ms ease,
+    background-color 220ms ease,
+    transform 220ms ease;
+}
+
+.mode-card:hover,
+.mode-card.is-active {
+  border-color: rgba(251, 191, 36, 0.42);
+  background: rgba(251, 191, 36, 0.14);
+  transform: translateY(-2px);
 }
 
 .action-button {
@@ -75,6 +90,46 @@
   box-shadow: 0 18px 38px rgba(244, 63, 94, 0.18);
 }
 
+.menu-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.menu-toggle__icon {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.22rem;
+}
+
+.menu-toggle__icon span {
+  display: block;
+  width: 1rem;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.menu-popover {
+  animation: panel-enter 220ms ease both;
+}
+
+.menu-item {
+  color: #0f172a;
+  background: transparent;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.menu-item:hover,
+.menu-item.is-active {
+  background: #0f172a;
+  color: #fff;
+  transform: translateX(2px);
+}
+
 .status-strip {
   transition:
     background-color 240ms ease,
@@ -85,6 +140,21 @@
 .app-shell[data-scene='guessing'] .status-strip,
 .app-shell[data-scene='revealed'] .status-strip {
   transform: translateY(-2px);
+}
+
+.room-share-panel {
+  animation: panel-enter 320ms ease both;
+}
+
+.copy-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.copy-button svg {
+  width: 1rem;
+  height: 1rem;
 }
 
 .lyrics-stage {
@@ -158,18 +228,6 @@
   }
 }
 
-@keyframes chip-enter {
-  from {
-    opacity: 0;
-    transform: translateX(14px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .app-shell,
   .scene-panel,
@@ -177,9 +235,9 @@
   .status-strip,
   .lyrics-stage,
   .lyrics-flow,
-  .room-badge,
-  .status-pill,
-  .catalog-list article {
+  .catalog-list article,
+  .room-share-panel,
+  .menu-popover {
     animation: none !important;
     transition: none !important;
     transform: none !important;

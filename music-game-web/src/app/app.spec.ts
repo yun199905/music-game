@@ -92,6 +92,34 @@ describe('App', () => {
     expect(compiled.querySelector('h1')?.textContent).toContain('Multiplayer lyrics guessing');
   });
 
+  it('shows create mode fields by default and hides the room code input', async () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain('Create Flow');
+    expect(compiled.textContent).not.toContain('Room Code');
+  });
+
+  it('shows the room code input after switching to join mode', async () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const buttons = Array.from(
+      fixture.nativeElement.querySelectorAll('button'),
+    ) as HTMLButtonElement[];
+    const joinModeButton = buttons.find((button) => button.textContent?.includes('Join Room'));
+    joinModeButton?.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain('Join Flow');
+    expect(compiled.textContent).toContain('Room Code');
+  });
+
   it('renders the active room header from the room snapshot code', async () => {
     const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance as unknown as {
@@ -131,5 +159,49 @@ describe('App', () => {
     });
 
     expect(app.joinCode()).toBe('ROOM1');
+  });
+
+  it('copies the active room code through the clipboard API', async () => {
+    const fixture = TestBed.createComponent(App);
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText },
+    });
+
+    const app = fixture.componentInstance as unknown as {
+      room: { set: (value: RoomSnapshot) => void };
+      copyRoomCode: () => Promise<void>;
+    };
+
+    app.room.set(roomSnapshot);
+    await app.copyRoomCode();
+
+    expect(writeText).toHaveBeenCalledWith('ROOM1');
+  });
+
+  it('switches active room content through the menu views', async () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance as unknown as {
+      room: { set: (value: RoomSnapshot) => void };
+      activeView: { set: (value: 'game' | 'ranking' | 'catalog') => void };
+    };
+
+    app.room.set(roomSnapshot);
+    app.activeView.set('ranking');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    let compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain('Live room ranking');
+    expect(compiled.textContent).not.toContain('Song maintenance');
+
+    app.activeView.set('catalog');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain('Song maintenance');
+    expect(compiled.textContent).not.toContain('Live room ranking');
   });
 });
