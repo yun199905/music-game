@@ -100,7 +100,6 @@ describe('App', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Create Flow');
     expect(compiled.textContent).not.toContain('Room Code');
-    expect(compiled.textContent).toContain('Menu');
   });
 
   it('shows the room code input after switching to join mode', async () => {

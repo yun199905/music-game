@@ -97,17 +97,6 @@ export class App {
     return 'lobby';
   });
   protected readonly canonicalRoomCode = computed(() => this.room()?.code ?? '');
-  protected readonly currentViewTitle = computed(() => {
-    switch (this.activeView()) {
-      case 'ranking':
-        return 'Live room ranking';
-      case 'catalog':
-        return 'Song maintenance';
-      default:
-        return 'Gameplay';
-    }
-  });
-
   constructor() {
     this.socket.onRoomState((room) => {
       this.syncRoomState(room);

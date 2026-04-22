@@ -16,7 +16,7 @@
 
         <div class="relative">
           <button
-            class="menu-toggle action-button rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900"
+            class="menu-toggle action-button text-slate-900"
             type="button"
             aria-label="Open navigation menu"
             (click)="toggleMenu()"
@@ -26,7 +26,6 @@
               <span></span>
               <span></span>
             </span>
-            Menu
           </button>
 
           @if (menuOpen()) {
@@ -95,39 +94,27 @@
       </p>
 
       @if (!room() && activeView() === 'game') {
-        <div class="entry-mode-grid mt-6 grid gap-4 lg:grid-cols-[0.88fr_1.12fr]">
-          <aside class="rounded-[2rem] border border-slate-200 bg-slate-950 p-5 text-white">
-            <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">
-              Entry Mode
-            </p>
-            <div class="mt-4 grid gap-3">
-              <button
-                class="mode-card w-full rounded-[1.75rem] border px-4 py-4 text-left"
-                [class.is-active]="entryMode() === 'create'"
-                type="button"
-                (click)="setEntryMode('create')"
-              >
-                <div class="text-sm font-black uppercase tracking-[0.22em]">Create Room</div>
-                <p class="mt-2 text-sm leading-6 text-slate-300">
-                  Start a new match, define rounds, and share the generated room code.
-                </p>
-              </button>
+        <div class="mt-6 rounded-[2rem] border border-slate-200 bg-white/75 p-5">
+          <div class="entry-switch flex flex-wrap gap-2">
+            <button
+              class="entry-switch__button rounded-full px-4 py-2 text-sm font-bold"
+              [class.is-active]="entryMode() === 'create'"
+              type="button"
+              (click)="setEntryMode('create')"
+            >
+              Create Room
+            </button>
+            <button
+              class="entry-switch__button rounded-full px-4 py-2 text-sm font-bold"
+              [class.is-active]="entryMode() === 'join'"
+              type="button"
+              (click)="setEntryMode('join')"
+            >
+              Join Room
+            </button>
+          </div>
 
-              <button
-                class="mode-card w-full rounded-[1.75rem] border px-4 py-4 text-left"
-                [class.is-active]="entryMode() === 'join'"
-                type="button"
-                (click)="setEntryMode('join')"
-              >
-                <div class="text-sm font-black uppercase tracking-[0.22em]">Join Room</div>
-                <p class="mt-2 text-sm leading-6 text-slate-300">
-                  Enter your nickname and a valid room code to jump into an existing match.
-                </p>
-              </button>
-            </div>
-          </aside>
-
-          <div class="rounded-[2rem] border border-slate-200 bg-white/75 p-5">
+          <div class="mt-4">
             <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
               {{ entryMode() === 'create' ? 'Create Flow' : 'Join Flow' }}
             </p>
@@ -211,14 +198,6 @@
                   Join Room
                 </button>
               }
-
-              <button
-                class="action-button action-button--secondary rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-950"
-                type="button"
-                (click)="setEntryMode(entryMode() === 'create' ? 'join' : 'create')"
-              >
-                Switch to {{ entryMode() === 'create' ? 'Join Room' : 'Create Room' }}
-              </button>
             </div>
           </div>
         </div>
@@ -410,11 +389,6 @@
                 </div>
               </div>
               <div class="flex flex-wrap items-center gap-3">
-                <div
-                  class="rounded-full bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.22em] text-slate-200"
-                >
-                  {{ currentViewTitle() }}
-                </div>
                 <button
                   class="copy-button action-button rounded-full border border-white/15 bg-white/10 px-4 py-3 text-sm font-bold text-white"
                   type="button"
@@ -433,7 +407,6 @@
                     <rect x="9" y="9" width="10" height="10" rx="2"></rect>
                     <path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
                   </svg>
-                  Copy
                 </button>
               </div>
             </div>
