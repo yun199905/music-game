@@ -20,11 +20,15 @@ import {
   styleUrl: './app.scss',
 })
 export class App {
+  private readonly defaultNotice = 'Create a room or join an existing match to start guessing.';
   private readonly sessionStorageKey = 'music-game-session';
   private readonly api = inject(GameApiService);
   private readonly socket = inject(GameSocketService);
   private readonly destroyRef = inject(DestroyRef);
 
+  protected readonly entryMode = signal<'create' | 'join'>('create');
+  protected readonly activeView = signal<'game' | 'ranking' | 'catalog'>('game');
+  protected readonly menuOpen = signal(false);
   protected readonly nickname = signal('');
   protected readonly joinCode = signal('');
   protected readonly answer = signal('');
@@ -32,7 +36,7 @@ export class App {
   protected readonly roundDurationSeconds = signal(30);
   protected readonly room = signal<RoomSnapshot | null>(null);
   protected readonly playerId = signal<string | null>(null);
-  protected readonly notice = signal('Create a room or join an existing match to start guessing.');
+  protected readonly notice = signal(this.defaultNotice);
   protected readonly errorMessage = signal('');
   protected readonly countdown = signal(0);
   protected readonly hasSubmittedCorrectAnswer = signal(false);
@@ -50,7 +54,6 @@ export class App {
 
   protected readonly isHost = computed(() => this.room()?.hostPlayerId === this.playerId());
   protected readonly currentRound = computed(() => this.room()?.currentRound);
-  protected readonly isLobby = computed(() => this.room()?.status === 'lobby');
   protected readonly canStart = computed(
     () => this.isHost() && this.room() !== null && (this.room()?.players.length ?? 0) >= 2,
   );
@@ -93,7 +96,17 @@ export class App {
 
     return 'lobby';
   });
-  protected readonly canonicalRoomCode = computed(() => this.room()?.code ?? this.joinCode());
+  protected readonly canonicalRoomCode = computed(() => this.room()?.code ?? '');
+  protected readonly currentViewTitle = computed(() => {
+    switch (this.activeView()) {
+      case 'ranking':
+        return 'Live room ranking';
+      case 'catalog':
+        return 'Song maintenance';
+      default:
+        return 'Gameplay';
+    }
+  });
 
   constructor() {
     this.socket.onRoomState((room) => {
@@ -184,6 +197,20 @@ export class App {
     this.songLocalLyrics.set(value);
   }
 
+  protected setEntryMode(mode: 'create' | 'join') {
+    this.entryMode.set(mode);
+    this.errorMessage.set('');
+  }
+
+  protected toggleMenu() {
+    this.menuOpen.update((open) => !open);
+  }
+
+  protected openView(view: 'game' | 'ranking' | 'catalog') {
+    this.activeView.set(view);
+    this.menuOpen.set(false);
+  }
+
   protected async createRoom() {
     if (!this.nickname().trim()) {
       this.errorMessage.set('Nickname is required.');
@@ -198,6 +225,7 @@ export class App {
         roundDurationSeconds: this.roundDurationSeconds(),
       });
       await this.applySession(session);
+      this.entryMode.set('create');
       this.notice.set(
         `Room ${this.canonicalRoomCode()} created. Share the code and wait for players.`,
       );
@@ -217,6 +245,7 @@ export class App {
       const requestedRoomCode = this.joinCode().trim().toUpperCase();
       const session = await this.api.joinRoom(requestedRoomCode, this.nickname().trim());
       await this.applySession(session);
+      this.entryMode.set('join');
       this.notice.set(`Joined room ${this.canonicalRoomCode()}. Waiting for the host to start.`);
     } catch (error) {
       this.errorMessage.set((error as Error).message);
@@ -280,7 +309,8 @@ export class App {
     this.playerId.set(null);
     this.answer.set('');
     this.joinCode.set('');
-    this.nickname.set('');
+    this.activeView.set('game');
+    this.menuOpen.set(false);
     this.notice.set('Disconnected from room.');
     this.countdown.set(0);
     this.hasSubmittedCorrectAnswer.set(false);
@@ -289,6 +319,25 @@ export class App {
 
   protected toggleCatalog() {
     this.catalogOpen.update((open) => !open);
+  }
+
+  protected async copyRoomCode() {
+    const roomCode = this.canonicalRoomCode();
+    if (!roomCode) {
+      return;
+    }
+
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(roomCode);
+      } else {
+        this.copyUsingTextarea(roomCode);
+      }
+
+      this.notice.set(`Room code ${roomCode} copied.`);
+    } catch {
+      this.errorMessage.set('Unable to copy the room code automatically.');
+    }
   }
 
   protected async submitSong() {
@@ -355,6 +404,8 @@ export class App {
         this.nickname(),
     );
     this.joinCode.set(session.room.code);
+    this.activeView.set('game');
+    this.menuOpen.set(false);
     this.syncRoomState(session.room);
     const room = await this.socket.connect(session.room.code, session.playerId);
     this.syncRoomState(room);
@@ -375,6 +426,8 @@ export class App {
       this.syncRoomState(room);
       const connectedRoom = await this.socket.connect(room.code, session.playerId);
       this.syncRoomState(connectedRoom);
+      this.activeView.set('game');
+      this.menuOpen.set(false);
       this.notice.set(`Rejoined room ${connectedRoom.code}.`);
     } catch {
       this.clearSession();
@@ -468,5 +521,17 @@ export class App {
 
   private clearSession() {
     localStorage.removeItem(this.sessionStorageKey);
+  }
+
+  private copyUsingTextarea(value: string) {
+    const textarea = document.createElement('textarea');
+    textarea.value = value;
+    textarea.setAttribute('readonly', 'true');
+    textarea.style.position = 'absolute';
+    textarea.style.left = '-9999px';
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
   }
 }
