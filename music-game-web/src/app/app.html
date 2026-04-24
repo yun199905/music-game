@@ -6,14 +6,32 @@
         <h1>Multiplayer lyrics guessing for small rooms.</h1>
       </div>
 
+      <div class="hero-toolbar__actions hero-toolbar__actions--desktop">
+        @if (!room()) {
+          <button mat-stroked-button type="button" (click)="openLandingView('create')">
+            Create Room
+          </button>
+          <button mat-stroked-button type="button" (click)="openLandingView('join')">
+            Join Room
+          </button>
+          <button mat-stroked-button type="button" (click)="openLandingView('catalog')">
+            Songs
+          </button>
+        } @else {
+          <button mat-stroked-button type="button" (click)="openView('game')">Gameplay</button>
+          <button mat-stroked-button type="button" (click)="openView('ranking')">Ranking</button>
+          <button mat-stroked-button type="button" (click)="openView('catalog')">Songs</button>
+        }
+      </div>
+
       <button
-        mat-icon-button
-        class="nav-trigger"
+        mat-stroked-button
+        class="nav-trigger nav-trigger--mobile"
         type="button"
         aria-label="Open navigation menu"
         [matMenuTriggerFor]="navigationMenu"
       >
-        <mat-icon>menu</mat-icon>
+        Menu
       </button>
     </mat-toolbar>
 
