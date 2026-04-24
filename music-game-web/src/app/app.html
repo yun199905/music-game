@@ -27,7 +27,6 @@
               <span></span>
             </span>
           </button>
-
         </div>
       </div>
 
@@ -43,6 +42,17 @@
           <aside
             class="menu-overlay__panel ml-auto flex h-full w-full flex-col justify-start bg-white px-5 py-6 text-left shadow-[0_24px_80px_rgba(15,23,42,0.24)] sm:w-[33vw] sm:min-w-[320px] sm:max-w-[420px]"
           >
+            <div class="menu-overlay__top flex items-center justify-end">
+              <button
+                class="menu-close action-button"
+                type="button"
+                aria-label="Close navigation menu"
+                (click)="toggleMenu()"
+              >
+                <span class="menu-close__icon" aria-hidden="true"></span>
+              </button>
+            </div>
+
             <nav class="menu-overlay__nav flex flex-col gap-3">
               <button
                 class="menu-item w-full rounded-2xl px-4 py-4 text-left text-sm font-bold"
@@ -127,7 +137,9 @@
               </div>
               <div class="entry-panel__meta-item">
                 <span class="entry-panel__meta-label">Flow</span>
-                <strong>{{ entryMode() === 'create' ? 'set rounds and share code' : 'enter code and sync in' }}</strong>
+                <strong>{{
+                  entryMode() === 'create' ? 'set rounds and share code' : 'enter code and sync in'
+                }}</strong>
               </div>
             </div>
 
@@ -227,7 +239,9 @@
               class="catalog-toggle action-button action-button--secondary flex h-11 w-11 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-900"
               [class.is-open]="catalogOpen()"
               [attr.aria-expanded]="catalogOpen()"
-              [attr.aria-label]="catalogOpen() ? 'Collapse song maintenance panel' : 'Open song maintenance panel'"
+              [attr.aria-label]="
+                catalogOpen() ? 'Collapse song maintenance panel' : 'Open song maintenance panel'
+              "
               (click)="toggleCatalog()"
             >
               <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="catalog-toggle__icon">
@@ -449,7 +463,7 @@
                     <rect x="9" y="9" width="10" height="10" rx="2"></rect>
                     <path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
                   </svg>
-                  <span>Copy code</span>
+                  <span>Copy</span>
                 </button>
               </div>
             </div>
@@ -517,7 +531,9 @@
             </div>
 
             <div class="guess-panel grid gap-3 sm:grid-cols-[1fr_auto]">
-              <label class="guess-panel__field rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
+              <label
+                class="guess-panel__field rounded-3xl border border-slate-200 bg-slate-50/80 p-4"
+              >
                 <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
                   >Your Guess</span
                 >
@@ -681,10 +697,19 @@
                   class="catalog-toggle action-button action-button--secondary flex h-11 w-11 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-900"
                   [class.is-open]="catalogOpen()"
                   [attr.aria-expanded]="catalogOpen()"
-                  [attr.aria-label]="catalogOpen() ? 'Collapse song maintenance panel' : 'Open song maintenance panel'"
+                  [attr.aria-label]="
+                    catalogOpen()
+                      ? 'Collapse song maintenance panel'
+                      : 'Open song maintenance panel'
+                  "
                   (click)="toggleCatalog()"
                 >
-                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="catalog-toggle__icon">
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    class="catalog-toggle__icon"
+                  >
                     <path
                       d="M4 15L12 7L20 15"
                       stroke="currentColor"

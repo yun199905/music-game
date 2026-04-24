@@ -87,7 +87,7 @@ These are peer views in navigation. The user-facing navigation labels should be:
 - Room share panel:
   - label: `Room Code`
   - large room code
-  - explicit `Copy code` button
+  - explicit `Copy` button
 - Status strip:
   - room status
   - countdown

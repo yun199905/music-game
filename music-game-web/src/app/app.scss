@@ -201,13 +201,45 @@
   animation: drawer-enter 220ms ease both;
 }
 
+.menu-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(248, 250, 252, 0.9);
+}
+
+.menu-close__icon {
+  position: relative;
+}
+
+.menu-close__icon::before,
+.menu-close__icon::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1rem;
+  height: 2px;
+  background: currentColor;
+}
+
+.menu-close__icon::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.menu-close__icon::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
 .menu-overlay__nav {
-  margin-top: 3.5rem;
+  margin-top: 2rem;
 }
 
 .menu-item {
   color: #0f172a;
-  background: transparent;
   transition:
     background-color 180ms ease,
     color 180ms ease,
