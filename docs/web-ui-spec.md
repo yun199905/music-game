@@ -19,7 +19,16 @@ The frontend remains a single app shell with three main views controlled in-app:
 2. `ranking`
 3. `catalog`
 
-These are peer views in navigation. The landing experience still prioritizes room entry.
+These are peer views in navigation. The user-facing navigation labels should be:
+
+1. `首頁`
+2. `即時房間排名`
+3. `歌曲維護`
+
+`首頁` maps to the primary `game` view:
+
+- before joining a room: the landing/create-join surface
+- after joining a room: the room gameplay surface
 
 ## Landing / Pre-room Experience
 
@@ -34,16 +43,21 @@ These are peer views in navigation. The landing experience still prioritizes roo
 ### Menu behavior
 
 - Use a custom hamburger button, not an icon font or Angular Material menu.
-- Menu opens a popover with:
-  - before joining a room:
-    - `Create Room`
-    - `Join Room`
-    - `Song maintenance`
-  - after joining a room:
-    - `Gameplay`
-    - `Live room ranking`
-    - `Song maintenance`
+- Menu opens a full-height right-side overlay drawer with:
+  - backdrop click to close
+  - menu-trigger re-click to close
+  - menu-item click to close
+- Menu always shows exactly:
+  - `首頁`
+  - `即時房間排名`
+  - `歌曲維護`
 - Active destination should be visibly highlighted.
+- Desktop drawer behavior:
+  - fixed to the right edge
+  - full height from top to bottom
+  - width based on roughly one-third of the viewport, with sensible min/max constraints
+- Mobile drawer behavior:
+  - full-screen coverage
 
 ### Main landing content
 
@@ -93,6 +107,7 @@ These are peer views in navigation. The landing experience still prioritizes roo
 ### Ranking view
 
 - Title: `Live room ranking`
+- Before joining a room, ranking should still exist as a real page with an empty-state message.
 - Optional self-score badge
 - Player rows include:
   - initial avatar block
@@ -104,7 +119,10 @@ These are peer views in navigation. The landing experience still prioritizes roo
 ### Catalog view
 
 - Title: `Song maintenance`
-- Collapse/open control
+- Chevron icon-only collapse/open control
+- Toggle behavior:
+  - collapsed state shows down chevron
+  - expanded state shows up chevron
 - Form fields:
   - `Song Title`
   - `Artist`
@@ -122,7 +140,7 @@ These are peer views in navigation. The landing experience still prioritizes roo
 - Mobile is the default layout for all views.
 - Headline must never be clipped. It may wrap across multiple lines.
 - Landing form stacks in one column by default and expands on larger screens.
-- Menu remains a compact popover trigger on both mobile and desktop.
+- Menu remains a compact trigger, but the navigation surface itself is a full overlay drawer.
 - Gameplay controls may stack vertically on smaller screens.
 - Lyrics viewport height can expand on larger screens, but must remain readable on mobile.
 

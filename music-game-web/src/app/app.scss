@@ -186,8 +186,23 @@
   background: currentColor;
 }
 
-.menu-popover {
-  animation: panel-enter 220ms ease both;
+.menu-overlay {
+  display: flex;
+}
+
+.menu-overlay__backdrop {
+  flex: 1 1 auto;
+  border: 0;
+  background: rgba(15, 23, 42, 0.36);
+  backdrop-filter: blur(4px);
+}
+
+.menu-overlay__panel {
+  animation: drawer-enter 220ms ease both;
+}
+
+.menu-overlay__nav {
+  margin-top: 3.5rem;
 }
 
 .menu-item {
@@ -203,7 +218,7 @@
 .menu-item.is-active {
   background: #0f172a;
   color: #fff;
-  transform: translateX(2px);
+  transform: translateX(-2px);
 }
 
 .status-strip {
@@ -380,6 +395,33 @@
   z-index: 1;
 }
 
+.ranking-board__empty {
+  position: relative;
+  z-index: 1;
+}
+
+.ranking-board__empty-card {
+  display: grid;
+  gap: 0.4rem;
+  padding: 1rem;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 1.5rem;
+  background: rgba(248, 250, 252, 0.9);
+}
+
+.ranking-board__empty-card strong {
+  color: #0f172a;
+  line-height: 1.5;
+}
+
+.ranking-board__empty-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
 .ranking-row-card {
   position: relative;
   overflow: hidden;
@@ -460,6 +502,21 @@
   color: #64748b;
 }
 
+.catalog-toggle {
+  padding: 0;
+}
+
+.catalog-toggle__icon {
+  width: 1.4rem;
+  height: 1.4rem;
+  transition: transform 180ms ease;
+  transform: rotate(180deg);
+}
+
+.catalog-toggle.is-open .catalog-toggle__icon {
+  transform: rotate(0deg);
+}
+
 .catalog-panel__message,
 .catalog-panel__error {
   line-height: 1.6;
@@ -505,6 +562,18 @@
   }
 }
 
+@keyframes drawer-enter {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .app-shell,
   .scene-panel,
@@ -514,7 +583,7 @@
   .lyrics-flow,
   .catalog-list article,
   .room-share-panel,
-  .menu-popover {
+  .menu-overlay__panel {
     animation: none !important;
     transition: none !important;
     transform: none !important;
