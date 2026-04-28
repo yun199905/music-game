@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { appConfigValues } from './app-config';
 import {
   CreateSongRequest,
