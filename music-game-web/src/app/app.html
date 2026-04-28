@@ -8,8 +8,8 @@
     >
       <div class="flex items-start justify-between gap-4">
         <div class="min-w-0">
-          <p class="text-xs font-semibold uppercase tracking-[0.3em] text-amber-600">Music Game</p>
-          <h1 class="mt-2 text-3xl font-black leading-tight sm:text-5xl">
+          <p class="text-xs font-semibold tracking-[0.3em] text-amber-600 uppercase">Music Game</p>
+          <h1 class="mt-2 text-3xl leading-tight font-black sm:text-5xl">
             Multiplayer lyrics guessing for small rooms.
           </h1>
         </div>
@@ -40,7 +40,7 @@
           ></button>
 
           <aside
-            class="menu-overlay__panel ml-auto flex h-full w-full flex-col justify-start bg-white px-5 py-6 text-left shadow-[0_24px_80px_rgba(15,23,42,0.24)] sm:w-[33vw] sm:min-w-[320px] sm:max-w-[420px]"
+            class="menu-overlay__panel ml-auto flex h-full w-full flex-col justify-start bg-white px-5 py-6 text-left shadow-[0_24px_80px_rgba(15,23,42,0.24)] sm:w-[33vw] sm:max-w-[420px] sm:min-w-[320px]"
           >
             <div class="menu-overlay__top flex items-center justify-end">
               <button
@@ -116,7 +116,7 @@
           </div>
 
           <div class="mt-4">
-            <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
+            <p class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase">
               {{ entryMode() === 'create' ? 'Create Flow' : 'Join Flow' }}
             </p>
             <h2 class="mt-2 text-2xl font-black text-slate-950">
@@ -145,7 +145,7 @@
 
             <div class="mt-6 grid gap-3 sm:grid-cols-2">
               <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4 sm:col-span-2">
-                <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+                <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
                   >Nickname</span
                 >
                 <input
@@ -159,7 +159,7 @@
 
               @if (entryMode() === 'join') {
                 <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4 sm:col-span-2">
-                  <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+                  <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
                     >Room Code</span
                   >
                   <input
@@ -174,7 +174,7 @@
 
               @if (entryMode() === 'create') {
                 <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                  <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+                  <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
                     >Rounds</span
                   >
                   <input
@@ -188,7 +188,7 @@
                 </label>
 
                 <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                  <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+                  <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
                     >Seconds / Round</span
                   >
                   <input
@@ -230,7 +230,7 @@
         >
           <div class="catalog-panel__header flex items-center justify-between gap-3">
             <div>
-              <p class="text-xs font-semibold uppercase tracking-[0.25em] text-sky-600">
+              <p class="text-xs font-semibold tracking-[0.25em] text-sky-600 uppercase">
                 Catalog Studio
               </p>
               <h2 class="mt-2 text-2xl font-black">Song maintenance</h2>
@@ -265,7 +265,7 @@
             <div class="mt-5 grid gap-4">
               <div class="grid gap-3 sm:grid-cols-2">
                 <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                  <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+                  <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
                     >Song Title</span
                   >
                   <input
@@ -277,7 +277,7 @@
                 </label>
 
                 <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                  <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+                  <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
                     >Artist</span
                   >
                   <input
@@ -291,7 +291,7 @@
 
               <div class="grid gap-3 sm:grid-cols-[0.6fr_1.4fr]">
                 <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                  <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+                  <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
                     >Language</span
                   >
                   <select
@@ -306,7 +306,7 @@
                 </label>
 
                 <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                  <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+                  <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
                     >Aliases</span
                   >
                   <input
@@ -319,11 +319,11 @@
               </div>
 
               <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+                <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
                   >Local Lyrics</span
                 >
                 <textarea
-                  class="mt-2 min-h-32 w-full resize-y bg-transparent text-base font-medium leading-7 outline-none"
+                  class="mt-2 min-h-32 w-full resize-y bg-transparent text-base leading-7 font-medium outline-none"
                   [ngModel]="songLocalLyrics()"
                   (ngModelChange)="updateSongField('localLyrics', $event)"
                   placeholder="Paste playable fallback lyrics here. Chinese songs require this field."
@@ -339,7 +339,7 @@
                   {{ catalogSaving() ? 'Saving...' : 'Add Song' }}
                 </button>
                 <div
-                  class="rounded-full bg-slate-100 px-4 py-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-500"
+                  class="rounded-full bg-slate-100 px-4 py-3 text-xs font-bold tracking-[0.2em] text-slate-500 uppercase"
                 >
                   {{ catalogSongs().length }} songs loaded
                 </div>
@@ -363,11 +363,11 @@
                 class="catalog-list rounded-[1.75rem] border border-slate-200 bg-slate-950/95 p-4 text-white"
               >
                 <div class="flex items-center justify-between gap-3">
-                  <div class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">
+                  <div class="text-xs font-semibold tracking-[0.25em] text-slate-400 uppercase">
                     Playable songs
                   </div>
                   @if (catalogLoading()) {
-                    <div class="text-xs uppercase tracking-[0.25em] text-slate-500">Loading</div>
+                    <div class="text-xs tracking-[0.25em] text-slate-500 uppercase">Loading</div>
                   }
                 </div>
 
@@ -378,13 +378,13 @@
                         <div class="flex flex-wrap items-center gap-2">
                           <h3 class="text-lg font-black">{{ song.title }}</h3>
                           <span
-                            class="rounded-full bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-sky-200"
+                            class="rounded-full bg-white/10 px-3 py-1 text-[11px] font-bold tracking-[0.2em] text-sky-200 uppercase"
                           >
                             {{ song.language }}
                           </span>
                           @if (song.localLyrics) {
                             <span
-                              class="rounded-full bg-emerald-400/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-200"
+                              class="rounded-full bg-emerald-400/15 px-3 py-1 text-[11px] font-bold tracking-[0.2em] text-emerald-200 uppercase"
                             >
                               local lyrics
                             </span>
@@ -392,7 +392,7 @@
                         </div>
                         <p class="mt-2 text-sm text-slate-300">{{ song.artist }}</p>
                         @if (song.aliases?.length) {
-                          <p class="mt-3 text-xs uppercase tracking-[0.18em] text-slate-400">
+                          <p class="mt-3 text-xs tracking-[0.18em] text-slate-400 uppercase">
                             Aliases: {{ song.aliases?.join(', ') }}
                           </p>
                         }
@@ -414,7 +414,7 @@
         >
           <div class="ranking-board__header flex items-center justify-between">
             <div>
-              <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
+              <p class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase">
                 Leaderboard
               </p>
               <h2 class="mt-2 text-2xl font-black">Live room ranking</h2>
@@ -437,7 +437,7 @@
           >
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                <p class="text-xs font-semibold tracking-[0.3em] text-slate-400 uppercase">
                   Room Code
                 </p>
                 <div class="mt-2 text-4xl font-black tracking-[0.24em] sm:text-5xl">
@@ -473,13 +473,13 @@
             class="status-strip flex flex-wrap items-center gap-3 rounded-3xl border border-slate-200 bg-slate-50/80 p-4"
           >
             <div>
-              <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Status</p>
+              <p class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase">Status</p>
               <p class="mt-1 text-xl font-black capitalize">
                 {{ activeRoom.status.replace('_', ' ') }}
               </p>
             </div>
             <div class="ml-auto text-right">
-              <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
+              <p class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase">
                 Countdown
               </p>
               <p class="mt-1 text-4xl font-black text-rose-600">{{ countdown() }}</p>
@@ -493,7 +493,7 @@
             >
               <div class="lyrics-stage__glow"></div>
               <div
-                class="lyrics-stage__meta flex items-center justify-between text-xs uppercase tracking-[0.25em] text-slate-400"
+                class="lyrics-stage__meta flex items-center justify-between text-xs tracking-[0.25em] text-slate-400 uppercase"
               >
                 <span>Round {{ activeRoom.currentRoundIndex }} / {{ activeRoom.totalRounds }}</span>
                 <span>{{ activeRoom.phase }}</span>
@@ -508,7 +508,7 @@
                   "
                 >
                   @for (line of lyricLines(); track $index) {
-                    <p class="py-2 text-xl font-semibold leading-relaxed sm:text-2xl">
+                    <p class="py-2 text-xl leading-relaxed font-semibold sm:text-2xl">
                       {{ line }}
                     </p>
                   }
@@ -534,7 +534,7 @@
               <label
                 class="guess-panel__field rounded-3xl border border-slate-200 bg-slate-50/80 p-4"
               >
-                <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+                <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
                   >Your Guess</span
                 >
                 <input
@@ -587,7 +587,7 @@
               class="round-insight rounded-[2rem] border border-slate-200 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)]"
             >
               <div class="round-insight__header">
-                <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
+                <p class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase">
                   Round insight
                 </p>
                 <h2 class="mt-2 text-2xl font-black text-slate-950">What is happening now</h2>
@@ -622,7 +622,7 @@
             >
               <div class="ranking-board__header flex items-center justify-between">
                 <div>
-                  <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
+                  <p class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase">
                     Leaderboard
                   </p>
                   <h2 class="mt-2 text-2xl font-black">Live room ranking</h2>
@@ -653,14 +653,14 @@
                           {{ player.nickname }}
                           @if (player.isHost) {
                             <span
-                              class="ml-2 rounded-full bg-slate-900 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-white"
+                              class="ml-2 rounded-full bg-slate-900 px-2 py-1 text-[10px] tracking-[0.2em] text-white uppercase"
                             >
                               Host
                             </span>
                           }
                         </div>
                         <div
-                          class="text-xs uppercase tracking-[0.25em]"
+                          class="text-xs tracking-[0.25em] uppercase"
                           [class.text-emerald-600]="player.connected"
                           [class.text-slate-400]="!player.connected"
                         >
@@ -668,7 +668,7 @@
                         </div>
                       </div>
                       <div class="ranking-row-card__score text-right">
-                        <div class="text-xs uppercase tracking-[0.25em] text-slate-400">Score</div>
+                        <div class="text-xs tracking-[0.25em] text-slate-400 uppercase">Score</div>
                         <div class="text-2xl font-black text-slate-950">{{ player.score }}</div>
                       </div>
                     </div>
@@ -688,7 +688,7 @@
             >
               <div class="catalog-panel__header flex items-center justify-between gap-3">
                 <div>
-                  <p class="text-xs font-semibold uppercase tracking-[0.25em] text-sky-600">
+                  <p class="text-xs font-semibold tracking-[0.25em] text-sky-600 uppercase">
                     Catalog Studio
                   </p>
                   <h2 class="mt-2 text-2xl font-black">Song maintenance</h2>
@@ -741,7 +741,7 @@
 
                   <div class="grid gap-3 sm:grid-cols-2">
                     <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                      <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+                      <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
                         >Song Title</span
                       >
                       <input
@@ -753,7 +753,7 @@
                     </label>
 
                     <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                      <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+                      <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
                         >Artist</span
                       >
                       <input
@@ -767,7 +767,7 @@
 
                   <div class="grid gap-3 sm:grid-cols-[0.6fr_1.4fr]">
                     <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                      <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+                      <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
                         >Language</span
                       >
                       <select
@@ -782,7 +782,7 @@
                     </label>
 
                     <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                      <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+                      <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
                         >Aliases</span
                       >
                       <input
@@ -795,11 +795,11 @@
                   </div>
 
                   <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                    <span class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+                    <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
                       >Local Lyrics</span
                     >
                     <textarea
-                      class="mt-2 min-h-32 w-full resize-y bg-transparent text-base font-medium leading-7 outline-none"
+                      class="mt-2 min-h-32 w-full resize-y bg-transparent text-base leading-7 font-medium outline-none"
                       [ngModel]="songLocalLyrics()"
                       (ngModelChange)="updateSongField('localLyrics', $event)"
                       placeholder="Paste playable fallback lyrics here. Chinese songs require this field."
@@ -815,7 +815,7 @@
                       {{ catalogSaving() ? 'Saving...' : 'Add Song' }}
                     </button>
                     <div
-                      class="rounded-full bg-slate-100 px-4 py-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-500"
+                      class="rounded-full bg-slate-100 px-4 py-3 text-xs font-bold tracking-[0.2em] text-slate-500 uppercase"
                     >
                       {{ catalogSongs().length }} songs loaded
                     </div>
@@ -839,11 +839,11 @@
                     class="catalog-list rounded-[1.75rem] border border-slate-200 bg-slate-950/95 p-4 text-white"
                   >
                     <div class="flex items-center justify-between gap-3">
-                      <div class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">
+                      <div class="text-xs font-semibold tracking-[0.25em] text-slate-400 uppercase">
                         Playable songs
                       </div>
                       @if (catalogLoading()) {
-                        <div class="text-xs uppercase tracking-[0.25em] text-slate-500">
+                        <div class="text-xs tracking-[0.25em] text-slate-500 uppercase">
                           Loading
                         </div>
                       }
@@ -856,13 +856,13 @@
                             <div class="flex flex-wrap items-center gap-2">
                               <h3 class="text-lg font-black">{{ song.title }}</h3>
                               <span
-                                class="rounded-full bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-sky-200"
+                                class="rounded-full bg-white/10 px-3 py-1 text-[11px] font-bold tracking-[0.2em] text-sky-200 uppercase"
                               >
                                 {{ song.language }}
                               </span>
                               @if (song.localLyrics) {
                                 <span
-                                  class="rounded-full bg-emerald-400/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-200"
+                                  class="rounded-full bg-emerald-400/15 px-3 py-1 text-[11px] font-bold tracking-[0.2em] text-emerald-200 uppercase"
                                 >
                                   local lyrics
                                 </span>
@@ -870,7 +870,7 @@
                             </div>
                             <p class="mt-2 text-sm text-slate-300">{{ song.artist }}</p>
                             @if (song.aliases?.length) {
-                              <p class="mt-3 text-xs uppercase tracking-[0.18em] text-slate-400">
+                              <p class="mt-3 text-xs tracking-[0.18em] text-slate-400 uppercase">
                                 Aliases: {{ song.aliases?.join(', ') }}
                               </p>
                             }
