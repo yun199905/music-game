@@ -65,6 +65,20 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return room;
   }
 
+  @SubscribeMessage('leave_room')
+  async leaveRoom(@MessageBody() dto: SocketActionDto) {
+    const result = await this.gameService.leaveRoom(
+      dto.roomCode.toUpperCase(),
+      dto.playerId,
+    );
+
+    if (!result.roomClosed) {
+      return result.room;
+    }
+
+    return { roomClosed: true };
+  }
+
   @SubscribeMessage('start_game')
   async startGame(@MessageBody() dto: SocketActionDto) {
     const result = await this.gameService.startGame(

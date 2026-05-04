@@ -7,6 +7,7 @@ type RoomListener = (room: RoomSnapshot) => void;
 type RoundListener = (round: RoundSnapshot | undefined) => void;
 type DisconnectListener = (reason: string) => void;
 type ReconnectListener = (room: RoomSnapshot) => void;
+type RoomClosedListener = (roomCode: string) => void;
 type GuessAck = {
   room: RoomSnapshot;
   correct: boolean;
@@ -25,6 +26,7 @@ export class GameSocketService {
   private gameEndedListener?: RoomListener;
   private disconnectListener?: DisconnectListener;
   private reconnectListener?: ReconnectListener;
+  private roomClosedListener?: RoomClosedListener;
   private activeSession?: {
     roomCode: string;
     playerId: string;
@@ -60,6 +62,10 @@ export class GameSocketService {
     this.reconnectListener = listener;
   }
 
+  onRoomClosed(listener: RoomClosedListener) {
+    this.roomClosedListener = listener;
+  }
+
   emitStartGame(roomCode: string, playerId: string) {
     return this.emitWithAck<RoomSnapshot>(
       'start_game',
@@ -78,6 +84,13 @@ export class GameSocketService {
 
   emitGuess(roomCode: string, playerId: string, guess: string) {
     return this.emitWithAck<GuessAck>('submit_guess', { roomCode, playerId, guess });
+  }
+
+  emitLeaveRoom(roomCode: string, playerId: string) {
+    return this.emitWithAck<RoomSnapshot | { roomClosed: true }>('leave_room', {
+      roomCode,
+      playerId,
+    });
   }
 
   disconnect() {
@@ -105,6 +118,10 @@ export class GameSocketService {
     this.socket.on('round_ended', (round: RoundSnapshot) => this.roundEndedListener?.(round));
     this.socket.on('game_ended', (room: RoomSnapshot) => this.gameEndedListener?.(room));
     this.socket.on('disconnect', (reason) => this.disconnectListener?.(reason));
+    this.socket.on('room_closed', ({ roomCode }: { roomCode: string }) => {
+      this.activeSession = undefined;
+      this.roomClosedListener?.(roomCode);
+    });
     this.socket.on('reconnect', () => {
       void this.rejoinActiveSession();
     });

@@ -137,6 +137,10 @@ export class App {
       this.notice.set(`Reconnected to room ${room.code}.`);
     });
 
+    this.socket.onRoomClosed((roomCode) => {
+      this.resetRoomState(`Room ${roomCode} was closed because the host did not return.`);
+    });
+
     interval(1000)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.tickCountdown());
@@ -305,18 +309,20 @@ export class App {
     }
   }
 
-  protected leaveRoom() {
-    this.socket.disconnect();
-    this.room.set(null);
-    this.playerId.set(null);
-    this.answer.set('');
-    this.joinCode.set('');
-    this.activeView.set('game');
-    this.menuOpen.set(false);
-    this.notice.set('Disconnected from room.');
-    this.countdown.set(0);
-    this.hasSubmittedCorrectAnswer.set(false);
-    this.clearSession();
+  protected async leaveRoom() {
+    const room = this.room();
+    const playerId = this.playerId();
+
+    try {
+      if (room && playerId) {
+        await this.socket.emitLeaveRoom(room.code, playerId);
+      }
+    } catch (error) {
+      this.errorMessage.set((error as Error).message);
+    } finally {
+      this.socket.disconnect();
+      this.resetRoomState('Disconnected from room.');
+    }
   }
 
   protected toggleCatalog() {
@@ -411,6 +417,19 @@ export class App {
     this.syncRoomState(session.room);
     const room = await this.socket.connect(session.room.code, session.playerId);
     this.syncRoomState(room);
+  }
+
+  private resetRoomState(notice: string) {
+    this.room.set(null);
+    this.playerId.set(null);
+    this.answer.set('');
+    this.joinCode.set('');
+    this.activeView.set('game');
+    this.menuOpen.set(false);
+    this.notice.set(notice);
+    this.countdown.set(0);
+    this.hasSubmittedCorrectAnswer.set(false);
+    this.clearSession();
   }
 
   private async restoreSession() {
