@@ -39,6 +39,7 @@ describe('App', () => {
     emitStartGame: ReturnType<typeof vi.fn>;
     emitNextRound: ReturnType<typeof vi.fn>;
     emitGuess: ReturnType<typeof vi.fn>;
+    emitLeaveRoom: ReturnType<typeof vi.fn>;
     disconnect: ReturnType<typeof vi.fn>;
     onRoomState: ReturnType<typeof vi.fn>;
     onRoundStarted: ReturnType<typeof vi.fn>;
@@ -46,6 +47,7 @@ describe('App', () => {
     onGameEnded: ReturnType<typeof vi.fn>;
     onDisconnect: ReturnType<typeof vi.fn>;
     onReconnect: ReturnType<typeof vi.fn>;
+    onRoomClosed: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(async () => {
@@ -61,6 +63,7 @@ describe('App', () => {
       emitStartGame: vi.fn(),
       emitNextRound: vi.fn(),
       emitGuess: vi.fn(),
+      emitLeaveRoom: vi.fn(),
       disconnect: vi.fn(),
       onRoomState: vi.fn(),
       onRoundStarted: vi.fn(),
@@ -68,6 +71,7 @@ describe('App', () => {
       onGameEnded: vi.fn(),
       onDisconnect: vi.fn(),
       onReconnect: vi.fn(),
+      onRoomClosed: vi.fn(),
     };
 
     await TestBed.configureTestingModule({

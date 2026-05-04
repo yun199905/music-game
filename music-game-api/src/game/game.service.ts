@@ -17,8 +17,10 @@ type Broadcaster = (roomCode: string, event: string, payload: unknown) => void;
 
 @Injectable()
 export class GameService implements OnModuleInit {
+  private readonly hostDisconnectGraceMs = 15000;
   private readonly logger = new Logger(GameService.name);
   private readonly rooms = new Map<string, RoomState>();
+  private readonly hostDisconnectTimers = new Map<string, NodeJS.Timeout>();
   private broadcaster?: Broadcaster;
 
   constructor(
@@ -82,6 +84,9 @@ export class GameService implements OnModuleInit {
       }
 
       existingPlayer.connected = true;
+      if (existingPlayer.id === room.hostPlayerId) {
+        this.clearHostDisconnectTimer(room.code);
+      }
       await this.persistenceService.persistRoom(room);
       return {
         playerId: existingPlayer.id,
@@ -112,9 +117,44 @@ export class GameService implements OnModuleInit {
     const player = this.getPlayer(room, playerId);
     player.connected = true;
     player.socketId = socketId;
+    if (player.id === room.hostPlayerId) {
+      this.clearHostDisconnectTimer(room.code);
+    }
     await this.persistenceService.persistRoom(room);
 
     return this.toSnapshot(room);
+  }
+
+  async leaveRoom(roomCode: string, playerId: string) {
+    const room = this.getRoom(roomCode);
+    const player = this.getPlayer(room, playerId);
+
+    if (player.socketId) {
+      player.socketId = undefined;
+    }
+
+    if (player.id === room.hostPlayerId) {
+      this.clearHostDisconnectTimer(room.code);
+    }
+
+    room.players.delete(player.id);
+
+    if (room.players.size === 0) {
+      await this.closeRoom(room, 'room_closed');
+      return { roomClosed: true as const };
+    }
+
+    if (player.id === room.hostPlayerId) {
+      this.assignNextHost(room);
+    }
+
+    await this.persistenceService.persistRoom(room);
+    this.emit(room.code, 'room_state', this.toSnapshot(room));
+
+    return {
+      roomClosed: false as const,
+      room: this.toSnapshot(room),
+    };
   }
 
   async detachSocket(socketId: string) {
@@ -137,6 +177,11 @@ export class GameService implements OnModuleInit {
 
     player.connected = false;
     player.socketId = undefined;
+
+    if (player.id === room.hostPlayerId) {
+      this.scheduleHostDisconnectTimeout(room.code, player.id);
+    }
+
     await this.persistenceService.persistRoom(room);
     this.emit(room.code, 'room_state', this.toSnapshot(room));
   }
@@ -342,6 +387,78 @@ export class GameService implements OnModuleInit {
 
   private emit(roomCode: string, event: string, payload: unknown) {
     this.broadcaster?.(roomCode, event, payload);
+  }
+
+  private scheduleHostDisconnectTimeout(roomCode: string, playerId: string) {
+    this.clearHostDisconnectTimer(roomCode);
+    const timer = setTimeout(() => {
+      void this.expireHostDisconnect(roomCode, playerId);
+    }, this.hostDisconnectGraceMs);
+    this.hostDisconnectTimers.set(roomCode, timer);
+  }
+
+  private clearHostDisconnectTimer(roomCode: string) {
+    const timer = this.hostDisconnectTimers.get(roomCode);
+    if (!timer) {
+      return;
+    }
+
+    clearTimeout(timer);
+    this.hostDisconnectTimers.delete(roomCode);
+  }
+
+  private async expireHostDisconnect(roomCode: string, playerId: string) {
+    this.hostDisconnectTimers.delete(roomCode);
+    const room = this.rooms.get(roomCode);
+    if (!room || room.hostPlayerId !== playerId) {
+      return;
+    }
+
+    const host = room.players.get(playerId);
+    if (!host || host.connected) {
+      return;
+    }
+
+    room.players.delete(playerId);
+    const nextHost = [...room.players.values()].find((player) => player.connected);
+
+    if (!nextHost) {
+      await this.closeRoom(room, 'room_closed');
+      return;
+    }
+
+    this.assignNextHost(room, nextHost.id);
+    await this.persistenceService.persistRoom(room);
+    this.emit(room.code, 'room_state', this.toSnapshot(room));
+  }
+
+  private assignNextHost(room: RoomState, preferredPlayerId?: string) {
+    const nextHost =
+      (preferredPlayerId ? room.players.get(preferredPlayerId) : undefined) ??
+      [...room.players.values()].find((player) => player.connected) ??
+      [...room.players.values()][0];
+
+    if (!nextHost) {
+      throw new NotFoundException('No players available to host the room.');
+    }
+
+    for (const player of room.players.values()) {
+      player.isHost = player.id === nextHost.id;
+    }
+
+    room.hostPlayerId = nextHost.id;
+  }
+
+  private async closeRoom(room: RoomState, reason: string) {
+    this.clearHostDisconnectTimer(room.code);
+
+    if (room.currentRound?.timer) {
+      clearTimeout(room.currentRound.timer);
+    }
+
+    this.rooms.delete(room.code);
+    await this.persistenceService.removeRoom(room.code);
+    this.emit(room.code, reason, { roomCode: room.code });
   }
 
   private createPlayer(nickname: string, isHost: boolean): PlayerSession {

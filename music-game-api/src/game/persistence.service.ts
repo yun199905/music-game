@@ -168,6 +168,15 @@ export class PersistenceService {
     );
   }
 
+  async removeRoom(roomCode: string): Promise<void> {
+    if (!this.roomRepository || !this.playerRepository) {
+      return;
+    }
+
+    await this.playerRepository.delete({ roomCode });
+    await this.roomRepository.delete({ roomCode });
+  }
+
   async createRound(round: RoomState['currentRound']): Promise<void> {
     if (!round || !this.roundRepository) {
       return;
