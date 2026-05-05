@@ -1,9 +1,9 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { GameService } from './game.service';
 import { JoinRoomDto } from './dto/join-room.dto';
 import { PersistenceService } from './persistence.service';
 
-describe('GameService host continuity', () => {
+describe('GameService player lifecycle', () => {
   const broadcaster = jest.fn();
 
   const createService = () => {
@@ -64,6 +64,39 @@ describe('GameService host continuity', () => {
       id: joined.playerId,
       isHost: true,
     });
+  });
+
+  it('releases the player slot when a non-host leaves explicitly', async () => {
+    const { service } = createService();
+    const created = await service.createRoom({ nickname: 'Host', totalRounds: 3 });
+    const joined = await joinGuest(service, created.room.code, 'Guest 1');
+
+    await service.leaveRoom(created.room.code, joined.playerId);
+
+    const rejoined = await joinGuest(service, created.room.code, 'Guest 2');
+    const snapshot = service.getSnapshot(created.room.code);
+    expect(rejoined.playerId).toBeDefined();
+    expect(snapshot.players).toHaveLength(2);
+    expect(snapshot.players.map((player) => player.nickname)).toEqual(
+      expect.arrayContaining(['Host', 'Guest 2']),
+    );
+  });
+
+  it('requires at least two connected players to start the game', async () => {
+    const { service } = createService();
+    const created = await service.createRoom({ nickname: 'Host', totalRounds: 3 });
+    const joined = await joinGuest(service, created.room.code);
+
+    await service.attachSocket(created.room.code, created.playerId, 'host-socket');
+    await service.attachSocket(created.room.code, joined.playerId, 'guest-socket');
+    await service.detachSocket('guest-socket');
+
+    await expect(service.startGame(created.room.code, created.playerId)).rejects.toThrow(
+      BadRequestException,
+    );
+    await expect(service.startGame(created.room.code, created.playerId)).rejects.toThrow(
+      'At least two players are required.',
+    );
   });
 
   it('transfers host ownership after the host disconnect grace period expires', async () => {
