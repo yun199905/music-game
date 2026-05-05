@@ -223,4 +223,46 @@ describe('App', () => {
     expect(compiled.textContent).toContain('Song maintenance');
     expect(compiled.textContent).not.toContain('Start a new room');
   });
+
+  it('only allows the host to start when at least two players are connected', async () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance as unknown as {
+      room: { set: (value: RoomSnapshot) => void };
+      playerId: { set: (value: string) => void };
+      canStart: () => boolean;
+    };
+
+    app.playerId.set('player-1');
+    app.room.set({
+      ...roomSnapshot,
+      players: [
+        roomSnapshot.players[0],
+        {
+          id: 'player-2',
+          nickname: 'Guest',
+          score: 0,
+          isHost: false,
+          connected: false,
+        },
+      ],
+    });
+
+    expect(app.canStart()).toBe(false);
+
+    app.room.set({
+      ...roomSnapshot,
+      players: [
+        roomSnapshot.players[0],
+        {
+          id: 'player-2',
+          nickname: 'Guest',
+          score: 0,
+          isHost: false,
+          connected: true,
+        },
+      ],
+    });
+
+    expect(app.canStart()).toBe(true);
+  });
 });

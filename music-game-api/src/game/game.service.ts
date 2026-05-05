@@ -190,7 +190,7 @@ export class GameService implements OnModuleInit {
     const room = this.getRoom(roomCode);
     this.ensureHost(room, playerId);
 
-    if (room.players.size < 2) {
+    if (this.countConnectedPlayers(room) < 2) {
       throw new BadRequestException('At least two players are required.');
     }
 
@@ -387,6 +387,10 @@ export class GameService implements OnModuleInit {
 
   private emit(roomCode: string, event: string, payload: unknown) {
     this.broadcaster?.(roomCode, event, payload);
+  }
+
+  private countConnectedPlayers(room: RoomState) {
+    return [...room.players.values()].filter((player) => player.connected).length;
   }
 
   private scheduleHostDisconnectTimeout(roomCode: string, playerId: string) {

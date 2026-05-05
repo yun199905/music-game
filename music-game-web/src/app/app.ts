@@ -54,8 +54,11 @@ export class App {
 
   protected readonly isHost = computed(() => this.room()?.hostPlayerId === this.playerId());
   protected readonly currentRound = computed(() => this.room()?.currentRound);
+  protected readonly connectedPlayers = computed(() =>
+    (this.room()?.players ?? []).filter((player) => player.connected),
+  );
   protected readonly canStart = computed(
-    () => this.isHost() && this.room() !== null && (this.room()?.players.length ?? 0) >= 2,
+    () => this.isHost() && this.connectedPlayers().length >= 2,
   );
   protected readonly leaderboard = computed(() => this.room()?.players ?? []);
   protected readonly winner = computed(() => {
