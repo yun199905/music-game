@@ -31,6 +31,7 @@ export class GameService implements OnModuleInit {
 
   async onModuleInit() {
     await this.persistenceService.ensureSeedSongs();
+    await this.persistenceService.invalidateUnrestorableRooms();
   }
 
   registerBroadcaster(broadcaster: Broadcaster) {

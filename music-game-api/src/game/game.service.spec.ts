@@ -9,6 +9,7 @@ describe('GameService player lifecycle', () => {
   const createService = () => {
     const persistenceService = {
       ensureSeedSongs: jest.fn().mockResolvedValue(undefined),
+      invalidateUnrestorableRooms: jest.fn().mockResolvedValue(undefined),
       persistRoom: jest.fn().mockResolvedValue(undefined),
       removeRoom: jest.fn().mockResolvedValue(undefined),
       getSongs: jest.fn().mockResolvedValue([]),
@@ -44,6 +45,19 @@ describe('GameService player lifecycle', () => {
   afterEach(() => {
     jest.runOnlyPendingTimers();
     jest.useRealTimers();
+  });
+
+  it('invalidates unrestorable persisted rooms during startup', async () => {
+    const { service, persistenceService } = createService();
+
+    await service.onModuleInit();
+
+    expect(
+      (persistenceService.ensureSeedSongs as unknown as jest.Mock).mock.calls,
+    ).toHaveLength(1);
+    expect(
+      (persistenceService.invalidateUnrestorableRooms as unknown as jest.Mock).mock.calls,
+    ).toHaveLength(1);
   });
 
   it('transfers host ownership when the host leaves explicitly', async () => {
