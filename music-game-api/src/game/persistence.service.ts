@@ -81,6 +81,26 @@ export class PersistenceService {
     );
   }
 
+  async invalidateUnrestorableRooms(): Promise<void> {
+    if (!this.roomRepository || !this.playerRepository) {
+      return;
+    }
+
+    await this.playerRepository.delete({});
+    await this.roomRepository.delete({});
+
+    if (!this.roundRepository) {
+      return;
+    }
+
+    await this.roundRepository
+      .createQueryBuilder()
+      .update()
+      .set({ endedAt: new Date() })
+      .where('endedAt IS NULL')
+      .execute();
+  }
+
   async getSongs(): Promise<SongEntity[]> {
     if (this.songRepository) {
       return this.songRepository.find({

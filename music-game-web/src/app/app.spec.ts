@@ -51,6 +51,7 @@ describe('App', () => {
   };
 
   beforeEach(async () => {
+    localStorage.clear();
     apiMock = {
       createRoom: vi.fn(),
       joinRoom: vi.fn(),
@@ -264,5 +265,32 @@ describe('App', () => {
     });
 
     expect(app.canStart()).toBe(true);
+  });
+
+  it('clears the saved session when restoreSession finds an invalidated room', async () => {
+    localStorage.setItem(
+      'music-game-session',
+      JSON.stringify({
+        roomCode: 'ROOM1',
+        playerId: 'player-1',
+        nickname: 'Host',
+      }),
+    );
+    apiMock.getRoom.mockRejectedValue(new Error('Room not found.'));
+
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance as unknown as {
+      notice: () => string;
+      room: () => RoomSnapshot | null;
+      playerId: () => string | null;
+    };
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(localStorage.getItem('music-game-session')).toBeNull();
+    expect(app.room()).toBeNull();
+    expect(app.playerId()).toBeNull();
+    expect(app.notice()).toContain('Saved session is no longer valid.');
   });
 });

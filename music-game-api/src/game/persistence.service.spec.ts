@@ -115,4 +115,42 @@ describe('PersistenceService', () => {
       ]),
     );
   });
+
+  it('invalidates unrestorable rooms and closes unfinished rounds on startup', async () => {
+    const playerRepository: MockRepository<unknown> = {
+      delete: jest.fn().mockResolvedValue(undefined),
+    };
+    const roomRepository: MockRepository<unknown> = {
+      delete: jest.fn().mockResolvedValue(undefined),
+    };
+    const execute = jest.fn().mockResolvedValue(undefined);
+    const where = jest.fn().mockReturnValue({ execute });
+    const set = jest.fn().mockReturnValue({ where });
+    const update = jest.fn().mockReturnValue({ set });
+    const createQueryBuilder = jest.fn().mockReturnValue({ update });
+    const roundRepository: MockRepository<unknown> = {
+      createQueryBuilder,
+    };
+
+    const service = new PersistenceService(
+      undefined,
+      undefined,
+      roomRepository as Repository<never>,
+      playerRepository as Repository<never>,
+      roundRepository as Repository<never>,
+      undefined,
+    );
+
+    await service.invalidateUnrestorableRooms();
+
+    expect(playerRepository.delete).toHaveBeenCalledWith({});
+    expect(roomRepository.delete).toHaveBeenCalledWith({});
+    expect(createQueryBuilder).toHaveBeenCalledTimes(1);
+    expect(update).toHaveBeenCalledTimes(1);
+    expect(set).toHaveBeenCalledWith({
+      endedAt: expect.any(Date),
+    });
+    expect(where).toHaveBeenCalledWith('endedAt IS NULL');
+    expect(execute).toHaveBeenCalledTimes(1);
+  });
 });
