@@ -122,8 +122,14 @@ export class GameSocketService {
       this.activeSession = undefined;
       this.roomClosedListener?.(roomCode);
     });
-    this.socket.on('reconnect', () => {
+    this.socket.io.on('reconnect', () => {
       void this.rejoinActiveSession();
+    });
+    this.socket.io.on('reconnect_error', (error: unknown) => {
+      this.disconnectListener?.(this.normalizeError(error).message);
+    });
+    this.socket.io.on('reconnect_failed', () => {
+      this.disconnectListener?.('Unable to reconnect to the room.');
     });
 
     return this.socket;
