@@ -51,6 +51,11 @@ class FakeSocket {
     this.emit('connect');
   }
 
+  failConnect(error: unknown) {
+    this.connected = false;
+    this.emit('connect_error', error);
+  }
+
   disconnect() {
     this.connected = false;
   }
@@ -171,8 +176,37 @@ describe('GameSocketService', () => {
           reconnecting: boolean;
           socket?: { disconnect: () => void };
         }
-      ).reconnecting,
+    ).reconnecting,
     ).toBe(false);
+  });
+
+  it('connects successfully and stores the active session', async () => {
+    const service = new GameSocketService();
+
+    const room = await service.connect('ROOM1', 'player-1');
+
+    expect(room).toEqual(roomSnapshot);
+    expect(
+      (
+        service as unknown as {
+          activeSession?: { roomCode: string; playerId: string };
+        }
+      ).activeSession,
+    ).toEqual({
+      roomCode: 'ROOM1',
+      playerId: 'player-1',
+    });
+  });
+
+  it('surfaces connect errors through normalizeError', async () => {
+    const service = new GameSocketService();
+    vi.spyOn(fakeSocket, 'connect').mockImplementationOnce(() => {
+      fakeSocket.failConnect({ message: ['Nickname is required.', 'Room code is required.'] });
+    });
+
+    await expect(service.connect('ROOM1', 'player-1')).rejects.toThrow(
+      'Nickname is required., Room code is required.',
+    );
   });
 
   it('wires the manager reconnect event to the rejoin flow', () => {
@@ -239,6 +273,28 @@ describe('GameSocketService', () => {
     ).rejoinActiveSession();
 
     expect(disconnectListener).toHaveBeenCalledWith('operation has timed out');
+  });
+
+  it('normalizes ack errors that expose a string message', async () => {
+    const service = new GameSocketService();
+    fakeSocket.setAckImpl(async () => {
+      throw { message: 'Request failed on server' };
+    });
+
+    await expect(service.emitGuess('ROOM1', 'player-1', 'guess')).rejects.toThrow(
+      'Request failed on server',
+    );
+  });
+
+  it('falls back to a generic message for unknown ack errors', async () => {
+    const service = new GameSocketService();
+    fakeSocket.setAckImpl(async () => {
+      throw { unexpected: true };
+    });
+
+    await expect(service.emitGuess('ROOM1', 'player-1', 'guess')).rejects.toThrow(
+      'Socket request failed',
+    );
   });
 
   it('surfaces reconnect_failed with a clear message', () => {
