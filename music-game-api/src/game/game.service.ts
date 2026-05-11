@@ -3,6 +3,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
 import { CreateRoomDto } from './dto/create-room.dto';
@@ -16,11 +17,15 @@ import { PlayerSession, RoomSnapshot, RoomState } from './game.types';
 type Broadcaster = (roomCode: string, event: string, payload: unknown) => void;
 
 @Injectable()
-export class GameService implements OnModuleInit {
+export class GameService implements OnModuleInit, OnModuleDestroy {
   private readonly hostDisconnectGraceMs = 15000;
+  private readonly idleRoomTtlMs = 15 * 60 * 1000;
+  private readonly finishedRoomTtlMs = 5 * 60 * 1000;
+  private readonly cleanupScanIntervalMs = 60 * 1000;
   private readonly logger = new Logger(GameService.name);
   private readonly rooms = new Map<string, RoomState>();
   private readonly hostDisconnectTimers = new Map<string, NodeJS.Timeout>();
+  private cleanupInterval?: NodeJS.Timeout;
   private broadcaster?: Broadcaster;
 
   constructor(
@@ -32,6 +37,26 @@ export class GameService implements OnModuleInit {
   async onModuleInit() {
     await this.persistenceService.ensureSeedSongs();
     await this.persistenceService.invalidateUnrestorableRooms();
+    this.cleanupInterval = setInterval(() => {
+      void this.cleanupExpiredRooms();
+    }, this.cleanupScanIntervalMs);
+  }
+
+  onModuleDestroy() {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = undefined;
+    }
+
+    for (const roomCode of this.hostDisconnectTimers.keys()) {
+      this.clearHostDisconnectTimer(roomCode);
+    }
+
+    for (const room of this.rooms.values()) {
+      if (room.currentRound?.timer) {
+        clearTimeout(room.currentRound.timer);
+      }
+    }
   }
 
   registerBroadcaster(broadcaster: Broadcaster) {
@@ -60,6 +85,7 @@ export class GameService implements OnModuleInit {
       currentRoundIndex: 0,
       players: new Map([[host.id, host]]),
       usedSongIds: new Set<string>(),
+      lastActivityAt: Date.now(),
     };
 
     this.rooms.set(roomCode, room);
@@ -88,6 +114,7 @@ export class GameService implements OnModuleInit {
       if (existingPlayer.id === room.hostPlayerId) {
         this.clearHostDisconnectTimer(room.code);
       }
+      this.touchRoom(room);
       await this.persistenceService.persistRoom(room);
       return {
         playerId: existingPlayer.id,
@@ -105,6 +132,7 @@ export class GameService implements OnModuleInit {
 
     const player = this.createPlayer(normalizedNickname, false);
     room.players.set(player.id, player);
+    this.touchRoom(room);
     await this.persistenceService.persistRoom(room);
 
     return {
@@ -121,6 +149,7 @@ export class GameService implements OnModuleInit {
     if (player.id === room.hostPlayerId) {
       this.clearHostDisconnectTimer(room.code);
     }
+    this.touchRoom(room);
     await this.persistenceService.persistRoom(room);
 
     return this.toSnapshot(room);
@@ -149,6 +178,7 @@ export class GameService implements OnModuleInit {
       this.assignNextHost(room);
     }
 
+    this.touchRoom(room);
     await this.persistenceService.persistRoom(room);
     this.emit(room.code, 'room_state', this.toSnapshot(room));
 
@@ -183,6 +213,7 @@ export class GameService implements OnModuleInit {
       this.scheduleHostDisconnectTimeout(room.code, player.id);
     }
 
+    this.touchRoom(room);
     await this.persistenceService.persistRoom(room);
     this.emit(room.code, 'room_state', this.toSnapshot(room));
   }
@@ -208,6 +239,7 @@ export class GameService implements OnModuleInit {
     const round = await this.prepareRound(room);
     room.currentRound = round;
     room.phase = 'guessing';
+    this.touchRoom(room);
 
     await this.persistenceService.persistRoom(room);
     await this.persistenceService.createRound(round);
@@ -231,6 +263,7 @@ export class GameService implements OnModuleInit {
     if (room.currentRoundIndex >= room.totalRounds) {
       room.status = 'finished';
       room.phase = 'revealed';
+      this.touchRoom(room);
       await this.persistenceService.persistRoom(room);
       return {
         room: this.toSnapshot(room),
@@ -242,6 +275,7 @@ export class GameService implements OnModuleInit {
     const round = await this.prepareRound(room);
     room.currentRound = round;
     room.phase = 'guessing';
+    this.touchRoom(room);
 
     await this.persistenceService.persistRoom(room);
     await this.persistenceService.createRound(round);
@@ -291,6 +325,7 @@ export class GameService implements OnModuleInit {
     player.score += 100 + remainingSeconds;
     round.winnerPlayerId ??= playerId;
 
+    this.touchRoom(room);
     await this.persistenceService.persistRoom(room);
     this.emit(room.code, 'room_state', this.toSnapshot(room));
 
@@ -378,6 +413,7 @@ export class GameService implements OnModuleInit {
 
     round.phase = 'revealed';
     room.phase = 'revealed';
+    this.touchRoom(room);
     await this.persistenceService.persistRoom(room);
     await this.persistenceService.endRound(round);
 
@@ -388,6 +424,32 @@ export class GameService implements OnModuleInit {
 
   private emit(roomCode: string, event: string, payload: unknown) {
     this.broadcaster?.(roomCode, event, payload);
+  }
+
+  private touchRoom(room: RoomState) {
+    room.lastActivityAt = Date.now();
+  }
+
+  private async cleanupExpiredRooms() {
+    const now = Date.now();
+    for (const room of this.rooms.values()) {
+      const ttlMs =
+        room.status === 'finished' ? this.finishedRoomTtlMs : this.idleRoomTtlMs;
+      const eligibleForCleanup =
+        room.status === 'finished' ||
+        (room.status === 'lobby' && room.phase === 'idle');
+
+      if (!eligibleForCleanup || now - room.lastActivityAt < ttlMs) {
+        continue;
+      }
+
+      this.logger.log(
+        `Cleaning up room ${room.code} after ${Math.round(
+          (now - room.lastActivityAt) / 1000,
+        )}s of inactivity (status=${room.status}, phase=${room.phase}).`,
+      );
+      await this.closeRoom(room, 'room_closed');
+    }
   }
 
   private countConnectedPlayers(room: RoomState) {

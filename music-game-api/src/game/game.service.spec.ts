@@ -43,6 +43,7 @@ describe('GameService player lifecycle', () => {
   });
 
   afterEach(() => {
+    jest.restoreAllMocks();
     jest.runOnlyPendingTimers();
     jest.useRealTimers();
   });
@@ -58,6 +59,78 @@ describe('GameService player lifecycle', () => {
     expect(
       (persistenceService.invalidateUnrestorableRooms as unknown as jest.Mock).mock.calls,
     ).toHaveLength(1);
+  });
+
+  it('cleans up idle lobby rooms after the inactivity ttl', async () => {
+    const { service, persistenceService } = createService();
+    const created = await service.createRoom({ nickname: 'Host', totalRounds: 3 });
+    const room = (
+      service as unknown as {
+        rooms: Map<string, { lastActivityAt: number }>;
+      }
+    ).rooms.get(created.room.code);
+
+    if (!room) {
+      throw new Error('Expected room to exist');
+    }
+
+    room.lastActivityAt = Date.now() - 16 * 60 * 1000;
+
+    await (
+      service as unknown as {
+        cleanupExpiredRooms: () => Promise<void>;
+      }
+    ).cleanupExpiredRooms();
+
+    expect(() => service.getSnapshot(created.room.code)).toThrow(NotFoundException);
+    expect(
+      (persistenceService.removeRoom as unknown as jest.Mock).mock.calls,
+    ).toContainEqual([created.room.code]);
+    expect(broadcaster).toHaveBeenCalledWith(created.room.code, 'room_closed', {
+      roomCode: created.room.code,
+    });
+  });
+
+  it('cleans up finished rooms and clears their round timer after the finished ttl', async () => {
+    const { service, persistenceService } = createService();
+    const created = await service.createRoom({ nickname: 'Host', totalRounds: 1 });
+    const room = (
+      service as unknown as {
+        rooms: Map<
+          string,
+          {
+            status: string;
+            phase: string;
+            lastActivityAt: number;
+            currentRound?: { timer?: NodeJS.Timeout };
+          }
+        >;
+      }
+    ).rooms.get(created.room.code);
+
+    if (!room) {
+      throw new Error('Expected room to exist');
+    }
+
+    const timer = setTimeout(() => undefined, 1000);
+    const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+
+    room.status = 'finished';
+    room.phase = 'revealed';
+    room.currentRound = { timer };
+    room.lastActivityAt = Date.now() - 6 * 60 * 1000;
+
+    await (
+      service as unknown as {
+        cleanupExpiredRooms: () => Promise<void>;
+      }
+    ).cleanupExpiredRooms();
+
+    expect(clearTimeoutSpy).toHaveBeenCalledWith(timer);
+    expect(() => service.getSnapshot(created.room.code)).toThrow(NotFoundException);
+    expect(
+      (persistenceService.removeRoom as unknown as jest.Mock).mock.calls,
+    ).toContainEqual([created.room.code]);
   });
 
   it('transfers host ownership when the host leaves explicitly', async () => {
