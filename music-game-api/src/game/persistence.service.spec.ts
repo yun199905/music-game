@@ -27,6 +27,7 @@ describe('PersistenceService', () => {
       ],
     ]),
     usedSongIds: new Set<string>(),
+    lastActivityAt: Date.now(),
   });
 
   it('upserts an existing room by roomCode instead of inserting a duplicate row', async () => {

@@ -39,6 +39,7 @@ export type RoomState = {
   currentRoundIndex: number;
   players: Map<string, PlayerSession>;
   usedSongIds: Set<string>;
+  lastActivityAt: number;
   currentRound?: RoundState;
 };
 
