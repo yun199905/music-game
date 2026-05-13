@@ -1,0 +1,127 @@
+<div class="entry-panel mt-6 rounded-[2rem] border border-slate-200 bg-white/75 p-5">
+  <div class="entry-switch flex flex-wrap gap-2">
+    <button
+      class="entry-switch__button rounded-full px-4 py-2 text-sm font-bold"
+      [class.is-active]="entryMode === 'create'"
+      type="button"
+      (click)="entryModeChange.emit('create')"
+    >
+      Create Room
+    </button>
+    <button
+      class="entry-switch__button rounded-full px-4 py-2 text-sm font-bold"
+      [class.is-active]="entryMode === 'join'"
+      type="button"
+      (click)="entryModeChange.emit('join')"
+    >
+      Join Room
+    </button>
+  </div>
+
+  <div class="mt-4">
+    <p class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase">
+      {{ entryMode === 'create' ? 'Create Flow' : 'Join Flow' }}
+    </p>
+    <h2 class="mt-2 text-2xl font-black text-slate-950">
+      {{ entryMode === 'create' ? 'Start a new room' : 'Join an existing room' }}
+    </h2>
+
+    <div class="entry-panel__description mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+      Pick the lane you want, lock your nickname, and get into the lobby before the first lyric
+      starts moving.
+    </div>
+
+    <div class="entry-panel__meta mt-5">
+      <div class="entry-panel__meta-item">
+        <span class="entry-panel__meta-label">Best for</span>
+        <strong>{{
+          entryMode === 'create' ? 'hosting a new party room' : 'jumping into a live room'
+        }}</strong>
+      </div>
+      <div class="entry-panel__meta-item">
+        <span class="entry-panel__meta-label">Flow</span>
+        <strong>{{
+          entryMode === 'create' ? 'set rounds and share code' : 'enter code and sync in'
+        }}</strong>
+      </div>
+    </div>
+
+    <div class="mt-6 grid gap-3 sm:grid-cols-2">
+      <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4 sm:col-span-2">
+        <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
+          >Nickname</span
+        >
+        <input
+          class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
+          [ngModel]="nickname"
+          (ngModelChange)="fieldChange.emit({ field: 'nickname', value: $event })"
+          maxlength="20"
+          placeholder="DJ Cat"
+        />
+      </label>
+
+      @if (entryMode === 'join') {
+        <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4 sm:col-span-2">
+          <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
+            >Room Code</span
+          >
+          <input
+            class="mt-2 w-full bg-transparent text-lg font-semibold uppercase outline-none"
+            [ngModel]="joinCode"
+            (ngModelChange)="fieldChange.emit({ field: 'joinCode', value: $event })"
+            maxlength="5"
+            placeholder="AB12C"
+          />
+        </label>
+      }
+
+      @if (entryMode === 'create') {
+        <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
+          <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
+            >Rounds</span
+          >
+          <input
+            class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
+            type="number"
+            min="1"
+            max="10"
+            [ngModel]="totalRounds"
+            (ngModelChange)="totalRoundsChange.emit(+$event || 5)"
+          />
+        </label>
+
+        <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
+          <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
+            >Seconds / Round</span
+          >
+          <input
+            class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
+            type="number"
+            min="15"
+            max="45"
+            [ngModel]="roundDurationSeconds"
+            (ngModelChange)="roundDurationSecondsChange.emit(+$event || 30)"
+          />
+        </label>
+      }
+    </div>
+
+    <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+      @if (entryMode === 'create') {
+        <button
+          class="action-button action-button--primary rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
+          (click)="createRoom.emit()"
+        >
+          Create Room
+        </button>
+      } @else {
+        <button
+          class="action-button action-button--primary rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
+          (click)="joinRoom.emit()"
+        >
+          Join Room
+        </button>
+      }
+    </div>
+  </div>
+</div>

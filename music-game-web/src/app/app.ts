@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ViewEncapsulation, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { interval } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -12,10 +12,22 @@ import {
   RoundSnapshot,
   SongCatalogItem,
 } from './core/game.models';
+import { CatalogViewComponent } from './views/catalog-view.component';
+import { GameplayViewComponent } from './views/gameplay-view.component';
+import { LandingViewComponent } from './views/landing-view.component';
+import { RankingViewComponent } from './views/ranking-view.component';
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, FormsModule],
+  encapsulation: ViewEncapsulation.None,
+  imports: [
+    CommonModule,
+    FormsModule,
+    LandingViewComponent,
+    RankingViewComponent,
+    CatalogViewComponent,
+    GameplayViewComponent,
+  ],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
