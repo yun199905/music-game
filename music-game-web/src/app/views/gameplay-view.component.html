@@ -1,0 +1,159 @@
+<div class="mt-6 flex flex-col gap-3">
+  <div class="room-share-panel rounded-[1.75rem] border border-slate-900 bg-slate-950 p-5 text-white">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <p class="text-xs font-semibold tracking-[0.3em] text-slate-400 uppercase">Room Code</p>
+        <div class="mt-2 text-4xl font-black tracking-[0.24em] sm:text-5xl">
+          {{ canonicalRoomCode }}
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center gap-3">
+        <button
+          class="copy-button action-button rounded-full border border-white/15 bg-white/10 px-4 py-3 text-sm font-bold text-white"
+          type="button"
+          aria-label="Copy room code"
+          (click)="copyRoomCode.emit()"
+        >
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="9" y="9" width="10" height="10" rx="2"></rect>
+            <path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
+          </svg>
+          <span>Copy</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="status-strip flex flex-wrap items-center gap-3 rounded-3xl border border-slate-200 bg-slate-50/80 p-4"
+  >
+    <div>
+      <p class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase">Status</p>
+      <p class="mt-1 text-xl font-black capitalize">{{ room.status.replace('_', ' ') }}</p>
+    </div>
+    <div class="ml-auto text-right">
+      <p class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase">Countdown</p>
+      <p class="mt-1 text-4xl font-black text-rose-600">{{ countdown }}</p>
+    </div>
+  </div>
+
+  <div
+    class="lyrics-stage rounded-[2rem] border border-slate-200 bg-slate-950 p-5 text-white"
+    [class.is-active]="room.phase === 'guessing'"
+  >
+    <div class="lyrics-stage__glow"></div>
+    <div
+      class="lyrics-stage__meta flex items-center justify-between text-xs tracking-[0.25em] text-slate-400 uppercase"
+    >
+      <span>Round {{ room.currentRoundIndex }} / {{ room.totalRounds }}</span>
+      <span>{{ room.phase }}</span>
+    </div>
+
+    <div class="lyrics-stage__viewport mt-4 h-[18rem] overflow-hidden sm:h-[24rem]">
+      <div
+        class="lyrics-flow"
+        [style.--scroll-duration]="lyricDuration"
+        [style.animation-play-state]="room.phase === 'guessing' ? 'running' : 'paused'"
+      >
+        @for (line of lyricLines; track $index) {
+          <p class="py-2 text-xl leading-relaxed font-semibold sm:text-2xl">{{ line }}</p>
+        }
+      </div>
+    </div>
+
+    @if (!currentRound) {
+      <div class="mt-4 rounded-3xl bg-white/10 p-4 text-sm leading-6 text-slate-200">
+        Waiting for the host to start the first round.
+      </div>
+    }
+
+    @if (currentRound?.phase === 'revealed') {
+      <div class="mt-4 rounded-3xl bg-emerald-400/15 p-4 text-sm leading-6 text-emerald-100">
+        Answer: {{ currentRound?.revealTitle }} · {{ currentRound?.revealArtist }}
+      </div>
+    }
+  </div>
+
+  <div class="guess-panel grid gap-3 sm:grid-cols-[1fr_auto]">
+    <label class="guess-panel__field rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
+      <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
+        >Your Guess</span
+      >
+      <input
+        class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
+        [disabled]="room.phase !== 'guessing' || hasSubmittedCorrectAnswer"
+        [ngModel]="answer"
+        (ngModelChange)="answerChange.emit($event)"
+        (keyup.enter)="submitGuess.emit()"
+        placeholder="Song title"
+      />
+    </label>
+
+    <button
+      class="guess-panel__submit action-button action-button--accent rounded-full bg-amber-400 px-6 py-3 text-sm font-black text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:bg-slate-200"
+      [disabled]="room.phase !== 'guessing' || hasSubmittedCorrectAnswer"
+      (click)="submitGuess.emit()"
+    >
+      Submit
+    </button>
+  </div>
+
+  <div class="game-actions flex flex-wrap gap-3">
+    <button
+      class="action-button action-button--primary rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+      [disabled]="!canStart || room.status !== 'lobby'"
+      (click)="startGame.emit()"
+    >
+      Start Game
+    </button>
+
+    <button
+      class="action-button action-button--secondary rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-900 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+      [disabled]="!isHost || room.phase !== 'revealed' || room.status === 'finished'"
+      (click)="nextRound.emit()"
+    >
+      Next Round
+    </button>
+
+    <button
+      class="action-button action-button--danger rounded-full border border-rose-200 bg-rose-50 px-6 py-3 text-sm font-bold text-rose-700"
+      (click)="leaveRoom.emit()"
+    >
+      Leave Room
+    </button>
+  </div>
+
+  <section
+    class="round-insight rounded-[2rem] border border-slate-200 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)]"
+  >
+    <div class="round-insight__header">
+      <p class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase">Round insight</p>
+      <h2 class="mt-2 text-2xl font-black text-slate-950">What is happening now</h2>
+    </div>
+
+    <div class="round-insight__grid mt-4">
+      <div class="round-insight__card">
+        <span class="round-insight__label">Control</span>
+        <strong>{{
+          isHost ? 'You control game start and round progress' : 'Wait for the host to move the room forward'
+        }}</strong>
+      </div>
+      <div class="round-insight__card">
+        <span class="round-insight__label">Scoring</span>
+        <strong>100 base points plus remaining seconds for a correct answer</strong>
+      </div>
+      <div class="round-insight__card">
+        <span class="round-insight__label">First correct</span>
+        <strong>{{ winner ? winner.nickname : 'No correct answer has been locked yet' }}</strong>
+      </div>
+    </div>
+  </section>
+</div>

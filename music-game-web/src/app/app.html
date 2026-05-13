@@ -95,797 +95,90 @@
       </div>
 
       @if (!room() && activeView() === 'game') {
-        <div class="entry-panel mt-6 rounded-[2rem] border border-slate-200 bg-white/75 p-5">
-          <div class="entry-switch flex flex-wrap gap-2">
-            <button
-              class="entry-switch__button rounded-full px-4 py-2 text-sm font-bold"
-              [class.is-active]="entryMode() === 'create'"
-              type="button"
-              (click)="setEntryMode('create')"
-            >
-              Create Room
-            </button>
-            <button
-              class="entry-switch__button rounded-full px-4 py-2 text-sm font-bold"
-              [class.is-active]="entryMode() === 'join'"
-              type="button"
-              (click)="setEntryMode('join')"
-            >
-              Join Room
-            </button>
-          </div>
-
-          <div class="mt-4">
-            <p class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase">
-              {{ entryMode() === 'create' ? 'Create Flow' : 'Join Flow' }}
-            </p>
-            <h2 class="mt-2 text-2xl font-black text-slate-950">
-              {{ entryMode() === 'create' ? 'Start a new room' : 'Join an existing room' }}
-            </h2>
-
-            <div class="entry-panel__description mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-              Pick the lane you want, lock your nickname, and get into the lobby before the first
-              lyric starts moving.
-            </div>
-
-            <div class="entry-panel__meta mt-5">
-              <div class="entry-panel__meta-item">
-                <span class="entry-panel__meta-label">Best for</span>
-                <strong>{{
-                  entryMode() === 'create' ? 'hosting a new party room' : 'jumping into a live room'
-                }}</strong>
-              </div>
-              <div class="entry-panel__meta-item">
-                <span class="entry-panel__meta-label">Flow</span>
-                <strong>{{
-                  entryMode() === 'create' ? 'set rounds and share code' : 'enter code and sync in'
-                }}</strong>
-              </div>
-            </div>
-
-            <div class="mt-6 grid gap-3 sm:grid-cols-2">
-              <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4 sm:col-span-2">
-                <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
-                  >Nickname</span
-                >
-                <input
-                  class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
-                  [ngModel]="nickname()"
-                  (ngModelChange)="updateField('nickname', $event)"
-                  maxlength="20"
-                  placeholder="DJ Cat"
-                />
-              </label>
-
-              @if (entryMode() === 'join') {
-                <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4 sm:col-span-2">
-                  <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
-                    >Room Code</span
-                  >
-                  <input
-                    class="mt-2 w-full bg-transparent text-lg font-semibold uppercase outline-none"
-                    [ngModel]="joinCode()"
-                    (ngModelChange)="updateField('joinCode', $event)"
-                    maxlength="5"
-                    placeholder="AB12C"
-                  />
-                </label>
-              }
-
-              @if (entryMode() === 'create') {
-                <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                  <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
-                    >Rounds</span
-                  >
-                  <input
-                    class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
-                    type="number"
-                    min="1"
-                    max="10"
-                    [ngModel]="totalRounds()"
-                    (ngModelChange)="totalRounds.set(+$event || 5)"
-                  />
-                </label>
-
-                <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                  <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
-                    >Seconds / Round</span
-                  >
-                  <input
-                    class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
-                    type="number"
-                    min="15"
-                    max="45"
-                    [ngModel]="roundDurationSeconds()"
-                    (ngModelChange)="roundDurationSeconds.set(+$event || 30)"
-                  />
-                </label>
-              }
-            </div>
-
-            <div class="mt-6 flex flex-col gap-3 sm:flex-row">
-              @if (entryMode() === 'create') {
-                <button
-                  class="action-button action-button--primary rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
-                  (click)="createRoom()"
-                >
-                  Create Room
-                </button>
-              } @else {
-                <button
-                  class="action-button action-button--primary rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
-                  (click)="joinRoom()"
-                >
-                  Join Room
-                </button>
-              }
-            </div>
-          </div>
-        </div>
+        <app-landing-view
+          [entryMode]="entryMode()"
+          [nickname]="nickname()"
+          [joinCode]="joinCode()"
+          [totalRounds]="totalRounds()"
+          [roundDurationSeconds]="roundDurationSeconds()"
+          (entryModeChange)="setEntryMode($event)"
+          (fieldChange)="updateField($event.field, $event.value)"
+          (totalRoundsChange)="totalRounds.set($event)"
+          (roundDurationSecondsChange)="roundDurationSeconds.set($event)"
+          (createRoom)="createRoom()"
+          (joinRoom)="joinRoom()"
+        />
       }
 
       @if (!room() && activeView() === 'catalog') {
-        <section
-          class="catalog-panel mt-6 rounded-[2rem] border border-slate-200 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)]"
-        >
-          <div class="catalog-panel__header flex items-center justify-between gap-3">
-            <div>
-              <p class="text-xs font-semibold tracking-[0.25em] text-sky-600 uppercase">
-                Catalog Studio
-              </p>
-              <h2 class="mt-2 text-2xl font-black">Song maintenance</h2>
-            </div>
-            <button
-              class="catalog-toggle action-button action-button--secondary flex h-11 w-11 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-900"
-              [class.is-open]="catalogOpen()"
-              [attr.aria-expanded]="catalogOpen()"
-              [attr.aria-label]="
-                catalogOpen() ? 'Collapse song maintenance panel' : 'Open song maintenance panel'
-              "
-              (click)="toggleCatalog()"
-            >
-              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="catalog-toggle__icon">
-                <path
-                  d="M4 15L12 7L20 15"
-                  stroke="currentColor"
-                  stroke-width="2.4"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </button>
-          </div>
-
-          <p class="mt-3 text-sm leading-6 text-slate-600">
-            Add playable songs without changing code. Chinese songs should include local lyrics so
-            rounds stay stable even when the external provider cannot resolve them.
-          </p>
-
-          @if (catalogOpen()) {
-            <div class="mt-5 grid gap-4">
-              <div class="grid gap-3 sm:grid-cols-2">
-                <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                  <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
-                    >Song Title</span
-                  >
-                  <input
-                    class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
-                    [ngModel]="songTitle()"
-                    (ngModelChange)="updateSongField('title', $event)"
-                    placeholder="晴天"
-                  />
-                </label>
-
-                <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                  <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
-                    >Artist</span
-                  >
-                  <input
-                    class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
-                    [ngModel]="songArtist()"
-                    (ngModelChange)="updateSongField('artist', $event)"
-                    placeholder="周杰倫"
-                  />
-                </label>
-              </div>
-
-              <div class="grid gap-3 sm:grid-cols-[0.6fr_1.4fr]">
-                <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                  <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
-                    >Language</span
-                  >
-                  <select
-                    class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
-                    [ngModel]="songLanguage()"
-                    (ngModelChange)="updateSongField('language', $event)"
-                  >
-                    <option value="en">English</option>
-                    <option value="zh-TW">繁體中文</option>
-                    <option value="zh-CN">简体中文</option>
-                  </select>
-                </label>
-
-                <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                  <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
-                    >Aliases</span
-                  >
-                  <input
-                    class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
-                    [ngModel]="songAliases()"
-                    (ngModelChange)="updateSongField('aliases', $event)"
-                    placeholder="天晴, Sunny Day"
-                  />
-                </label>
-              </div>
-
-              <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
-                  >Local Lyrics</span
-                >
-                <textarea
-                  class="mt-2 min-h-32 w-full resize-y bg-transparent text-base leading-7 font-medium outline-none"
-                  [ngModel]="songLocalLyrics()"
-                  (ngModelChange)="updateSongField('localLyrics', $event)"
-                  placeholder="Paste playable fallback lyrics here. Chinese songs require this field."
-                ></textarea>
-              </label>
-
-              <div class="flex flex-wrap gap-3">
-                <button
-                  class="action-button action-button--primary rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white"
-                  [disabled]="catalogSaving()"
-                  (click)="submitSong()"
-                >
-                  {{ catalogSaving() ? 'Saving...' : 'Add Song' }}
-                </button>
-                <div
-                  class="rounded-full bg-slate-100 px-4 py-3 text-xs font-bold tracking-[0.2em] text-slate-500 uppercase"
-                >
-                  {{ catalogSongs().length }} songs loaded
-                </div>
-              </div>
-
-              <div
-                class="rounded-3xl border border-slate-200 bg-slate-50/70 p-4 text-sm text-slate-600"
-              >
-                {{ catalogMessage() }}
-              </div>
-
-              @if (catalogError()) {
-                <div
-                  class="rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700"
-                >
-                  {{ catalogError() }}
-                </div>
-              }
-
-              <div
-                class="catalog-list rounded-[1.75rem] border border-slate-200 bg-slate-950/95 p-4 text-white"
-              >
-                <div class="flex items-center justify-between gap-3">
-                  <div class="text-xs font-semibold tracking-[0.25em] text-slate-400 uppercase">
-                    Playable songs
-                  </div>
-                  @if (catalogLoading()) {
-                    <div class="text-xs tracking-[0.25em] text-slate-500 uppercase">Loading</div>
-                  }
-                </div>
-
-                @if (catalogSongs().length) {
-                  <div class="mt-4 grid gap-3">
-                    @for (song of catalogSongs(); track trackSong($index, song)) {
-                      <article class="rounded-3xl border border-white/10 bg-white/5 p-4">
-                        <div class="flex flex-wrap items-center gap-2">
-                          <h3 class="text-lg font-black">{{ song.title }}</h3>
-                          <span
-                            class="rounded-full bg-white/10 px-3 py-1 text-[11px] font-bold tracking-[0.2em] text-sky-200 uppercase"
-                          >
-                            {{ song.language }}
-                          </span>
-                          @if (song.localLyrics) {
-                            <span
-                              class="rounded-full bg-emerald-400/15 px-3 py-1 text-[11px] font-bold tracking-[0.2em] text-emerald-200 uppercase"
-                            >
-                              local lyrics
-                            </span>
-                          }
-                        </div>
-                        <p class="mt-2 text-sm text-slate-300">{{ song.artist }}</p>
-                        @if (song.aliases?.length) {
-                          <p class="mt-3 text-xs tracking-[0.18em] text-slate-400 uppercase">
-                            Aliases: {{ song.aliases?.join(', ') }}
-                          </p>
-                        }
-                      </article>
-                    }
-                  </div>
-                } @else {
-                  <p class="mt-4 text-sm text-slate-400">No songs are loaded yet.</p>
-                }
-              </div>
-            </div>
-          }
-        </section>
+        <app-catalog-view
+          [catalogOpen]="catalogOpen()"
+          [catalogLoading]="catalogLoading()"
+          [catalogSaving]="catalogSaving()"
+          [catalogMessage]="catalogMessage()"
+          [catalogError]="catalogError()"
+          [catalogSongs]="catalogSongs()"
+          [songTitle]="songTitle()"
+          [songArtist]="songArtist()"
+          [songLanguage]="songLanguage()"
+          [songAliases]="songAliases()"
+          [songLocalLyrics]="songLocalLyrics()"
+          (toggleCatalog)="toggleCatalog()"
+          (songFieldChange)="updateSongField($event.field, $event.value)"
+          (submitSong)="submitSong()"
+        />
       }
 
       @if (!room() && activeView() === 'ranking') {
-        <section
-          class="ranking-board scene-panel mt-6 rounded-[2rem] border border-slate-200 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)]"
-        >
-          <div class="ranking-board__header flex items-center justify-between">
-            <div>
-              <p class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase">
-                Leaderboard
-              </p>
-              <h2 class="mt-2 text-2xl font-black">Live room ranking</h2>
-            </div>
-          </div>
-
-          <div class="ranking-board__empty mt-5">
-            <div class="ranking-board__empty-card">
-              <span class="ranking-board__empty-label">No active room</span>
-              <strong>Create or join a room first to populate the live leaderboard.</strong>
-            </div>
-          </div>
-        </section>
+        <app-ranking-view [room]="null" [currentPlayer]="null" />
       }
 
       @if (room(); as activeRoom) {
-        <div class="mt-6 flex flex-col gap-3">
-          <div
-            class="room-share-panel rounded-[1.75rem] border border-slate-900 bg-slate-950 p-5 text-white"
-          >
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p class="text-xs font-semibold tracking-[0.3em] text-slate-400 uppercase">
-                  Room Code
-                </p>
-                <div class="mt-2 text-4xl font-black tracking-[0.24em] sm:text-5xl">
-                  {{ canonicalRoomCode() }}
-                </div>
-              </div>
-              <div class="flex flex-wrap items-center gap-3">
-                <button
-                  class="copy-button action-button rounded-full border border-white/15 bg-white/10 px-4 py-3 text-sm font-bold text-white"
-                  type="button"
-                  aria-label="Copy room code"
-                  (click)="copyRoomCode()"
-                >
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <rect x="9" y="9" width="10" height="10" rx="2"></rect>
-                    <path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
-                  </svg>
-                  <span>Copy</span>
-                </button>
-              </div>
-            </div>
-          </div>
+        @if (activeView() === 'game') {
+          <app-gameplay-view
+            [room]="activeRoom"
+            [canonicalRoomCode]="canonicalRoomCode()"
+            [currentRound]="currentRound() ?? null"
+            [lyricLines]="lyricLines()"
+            [lyricDuration]="lyricDuration()"
+            [countdown]="countdown()"
+            [hasSubmittedCorrectAnswer]="hasSubmittedCorrectAnswer()"
+            [isHost]="isHost()"
+            [canStart]="canStart()"
+            [winner]="winner() ?? null"
+            [answer]="answer()"
+            (copyRoomCode)="copyRoomCode()"
+            (answerChange)="updateField('answer', $event)"
+            (submitGuess)="submitGuess()"
+            (startGame)="startGame()"
+            (nextRound)="nextRound()"
+            (leaveRoom)="leaveRoom()"
+          />
+        }
 
-          <div
-            class="status-strip flex flex-wrap items-center gap-3 rounded-3xl border border-slate-200 bg-slate-50/80 p-4"
-          >
-            <div>
-              <p class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase">Status</p>
-              <p class="mt-1 text-xl font-black capitalize">
-                {{ activeRoom.status.replace('_', ' ') }}
-              </p>
-            </div>
-            <div class="ml-auto text-right">
-              <p class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase">
-                Countdown
-              </p>
-              <p class="mt-1 text-4xl font-black text-rose-600">{{ countdown() }}</p>
-            </div>
-          </div>
+        @if (activeView() === 'ranking') {
+          <app-ranking-view [room]="activeRoom" [currentPlayer]="currentPlayer()" />
+        }
 
-          @if (activeView() === 'game') {
-            <div
-              class="lyrics-stage rounded-[2rem] border border-slate-200 bg-slate-950 p-5 text-white"
-              [class.is-active]="activeRoom.phase === 'guessing'"
-            >
-              <div class="lyrics-stage__glow"></div>
-              <div
-                class="lyrics-stage__meta flex items-center justify-between text-xs tracking-[0.25em] text-slate-400 uppercase"
-              >
-                <span>Round {{ activeRoom.currentRoundIndex }} / {{ activeRoom.totalRounds }}</span>
-                <span>{{ activeRoom.phase }}</span>
-              </div>
-
-              <div class="lyrics-stage__viewport mt-4 h-[18rem] overflow-hidden sm:h-[24rem]">
-                <div
-                  class="lyrics-flow"
-                  [style.--scroll-duration]="lyricDuration()"
-                  [style.animation-play-state]="
-                    activeRoom.phase === 'guessing' ? 'running' : 'paused'
-                  "
-                >
-                  @for (line of lyricLines(); track $index) {
-                    <p class="py-2 text-xl leading-relaxed font-semibold sm:text-2xl">
-                      {{ line }}
-                    </p>
-                  }
-                </div>
-              </div>
-
-              @if (!currentRound()) {
-                <div class="mt-4 rounded-3xl bg-white/10 p-4 text-sm leading-6 text-slate-200">
-                  Waiting for the host to start the first round.
-                </div>
-              }
-
-              @if (currentRound()?.phase === 'revealed') {
-                <div
-                  class="mt-4 rounded-3xl bg-emerald-400/15 p-4 text-sm leading-6 text-emerald-100"
-                >
-                  Answer: {{ currentRound()?.revealTitle }} · {{ currentRound()?.revealArtist }}
-                </div>
-              }
-            </div>
-
-            <div class="guess-panel grid gap-3 sm:grid-cols-[1fr_auto]">
-              <label
-                class="guess-panel__field rounded-3xl border border-slate-200 bg-slate-50/80 p-4"
-              >
-                <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
-                  >Your Guess</span
-                >
-                <input
-                  class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
-                  [disabled]="activeRoom.phase !== 'guessing' || hasSubmittedCorrectAnswer()"
-                  [ngModel]="answer()"
-                  (ngModelChange)="updateField('answer', $event)"
-                  (keyup.enter)="submitGuess()"
-                  placeholder="Song title"
-                />
-              </label>
-
-              <button
-                class="guess-panel__submit action-button action-button--accent rounded-full bg-amber-400 px-6 py-3 text-sm font-black text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:bg-slate-200"
-                [disabled]="activeRoom.phase !== 'guessing' || hasSubmittedCorrectAnswer()"
-                (click)="submitGuess()"
-              >
-                Submit
-              </button>
-            </div>
-
-            <div class="game-actions flex flex-wrap gap-3">
-              <button
-                class="action-button action-button--primary rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
-                [disabled]="!canStart() || activeRoom.status !== 'lobby'"
-                (click)="startGame()"
-              >
-                Start Game
-              </button>
-
-              <button
-                class="action-button action-button--secondary rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-900 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
-                [disabled]="
-                  !isHost() || activeRoom.phase !== 'revealed' || activeRoom.status === 'finished'
-                "
-                (click)="nextRound()"
-              >
-                Next Round
-              </button>
-
-              <button
-                class="action-button action-button--danger rounded-full border border-rose-200 bg-rose-50 px-6 py-3 text-sm font-bold text-rose-700"
-                (click)="leaveRoom()"
-              >
-                Leave Room
-              </button>
-            </div>
-
-            <section
-              class="round-insight rounded-[2rem] border border-slate-200 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)]"
-            >
-              <div class="round-insight__header">
-                <p class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase">
-                  Round insight
-                </p>
-                <h2 class="mt-2 text-2xl font-black text-slate-950">What is happening now</h2>
-              </div>
-
-              <div class="round-insight__grid mt-4">
-                <div class="round-insight__card">
-                  <span class="round-insight__label">Control</span>
-                  <strong>{{
-                    isHost()
-                      ? 'You control game start and round progress'
-                      : 'Wait for the host to move the room forward'
-                  }}</strong>
-                </div>
-                <div class="round-insight__card">
-                  <span class="round-insight__label">Scoring</span>
-                  <strong>100 base points plus remaining seconds for a correct answer</strong>
-                </div>
-                <div class="round-insight__card">
-                  <span class="round-insight__label">First correct</span>
-                  <strong>{{
-                    winner() ? winner()?.nickname : 'No correct answer has been locked yet'
-                  }}</strong>
-                </div>
-              </div>
-            </section>
-          }
-
-          @if (activeView() === 'ranking') {
-            <section
-              class="ranking-board scene-panel rounded-[2rem] border border-slate-200 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)]"
-            >
-              <div class="ranking-board__header flex items-center justify-between">
-                <div>
-                  <p class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase">
-                    Leaderboard
-                  </p>
-                  <h2 class="mt-2 text-2xl font-black">Live room ranking</h2>
-                </div>
-                @if (currentPlayer(); as me) {
-                  <div class="rounded-full bg-slate-950 px-3 py-2 text-xs font-bold text-white">
-                    You: {{ me.score }}
-                  </div>
-                }
-              </div>
-
-              @if (leaderboard().length) {
-                <div class="ranking-board__list mt-4 space-y-3">
-                  @for (player of leaderboard(); track trackPlayer($index, player)) {
-                    <div
-                      class="ranking-row-card flex items-center gap-3 rounded-3xl border border-slate-100 bg-slate-50 p-4"
-                    >
-                      <div class="ranking-row-card__position">
-                        {{ $index + 1 }}
-                      </div>
-                      <div
-                        class="ranking-row-card__avatar flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-300 text-lg font-black text-slate-950"
-                      >
-                        {{ player.nickname.slice(0, 1).toUpperCase() }}
-                      </div>
-                      <div class="min-w-0 flex-1">
-                        <div class="truncate text-base font-black text-slate-900">
-                          {{ player.nickname }}
-                          @if (player.isHost) {
-                            <span
-                              class="ml-2 rounded-full bg-slate-900 px-2 py-1 text-[10px] tracking-[0.2em] text-white uppercase"
-                            >
-                              Host
-                            </span>
-                          }
-                        </div>
-                        <div
-                          class="text-xs tracking-[0.25em] uppercase"
-                          [class.text-emerald-600]="player.connected"
-                          [class.text-slate-400]="!player.connected"
-                        >
-                          {{ player.connected ? 'Online' : 'Offline' }}
-                        </div>
-                      </div>
-                      <div class="ranking-row-card__score text-right">
-                        <div class="text-xs tracking-[0.25em] text-slate-400 uppercase">Score</div>
-                        <div class="text-2xl font-black text-slate-950">{{ player.score }}</div>
-                      </div>
-                    </div>
-                  }
-                </div>
-              } @else {
-                <p class="mt-4 text-sm text-slate-500">
-                  Players will appear here after joining a room.
-                </p>
-              }
-            </section>
-          }
-
-          @if (activeView() === 'catalog') {
-            <section
-              class="catalog-panel scene-panel rounded-[2rem] border border-slate-200 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)]"
-            >
-              <div class="catalog-panel__header flex items-center justify-between gap-3">
-                <div>
-                  <p class="text-xs font-semibold tracking-[0.25em] text-sky-600 uppercase">
-                    Catalog Studio
-                  </p>
-                  <h2 class="mt-2 text-2xl font-black">Song maintenance</h2>
-                </div>
-                <button
-                  class="catalog-toggle action-button action-button--secondary flex h-11 w-11 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-900"
-                  [class.is-open]="catalogOpen()"
-                  [attr.aria-expanded]="catalogOpen()"
-                  [attr.aria-label]="
-                    catalogOpen()
-                      ? 'Collapse song maintenance panel'
-                      : 'Open song maintenance panel'
-                  "
-                  (click)="toggleCatalog()"
-                >
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    class="catalog-toggle__icon"
-                  >
-                    <path
-                      d="M4 15L12 7L20 15"
-                      stroke="currentColor"
-                      stroke-width="2.4"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                </button>
-              </div>
-
-              <p class="mt-3 text-sm leading-6 text-slate-600">
-                Add playable songs without changing code. Chinese songs should include local lyrics
-                so rounds stay stable even when the external provider cannot resolve them.
-              </p>
-
-              @if (catalogOpen()) {
-                <div class="catalog-panel__body mt-5 grid gap-4">
-                  <div class="catalog-panel__summary">
-                    <div class="catalog-panel__summary-card">
-                      <span class="catalog-panel__summary-label">Purpose</span>
-                      <strong>Keep the playable song pool clean, stable, and easy to expand</strong>
-                    </div>
-                    <div class="catalog-panel__summary-card">
-                      <span class="catalog-panel__summary-label">Current load</span>
-                      <strong>{{ catalogSongs().length }} songs ready in the catalog</strong>
-                    </div>
-                  </div>
-
-                  <div class="grid gap-3 sm:grid-cols-2">
-                    <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                      <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
-                        >Song Title</span
-                      >
-                      <input
-                        class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
-                        [ngModel]="songTitle()"
-                        (ngModelChange)="updateSongField('title', $event)"
-                        placeholder="晴天"
-                      />
-                    </label>
-
-                    <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                      <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
-                        >Artist</span
-                      >
-                      <input
-                        class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
-                        [ngModel]="songArtist()"
-                        (ngModelChange)="updateSongField('artist', $event)"
-                        placeholder="周杰倫"
-                      />
-                    </label>
-                  </div>
-
-                  <div class="grid gap-3 sm:grid-cols-[0.6fr_1.4fr]">
-                    <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                      <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
-                        >Language</span
-                      >
-                      <select
-                        class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
-                        [ngModel]="songLanguage()"
-                        (ngModelChange)="updateSongField('language', $event)"
-                      >
-                        <option value="en">English</option>
-                        <option value="zh-TW">繁體中文</option>
-                        <option value="zh-CN">简体中文</option>
-                      </select>
-                    </label>
-
-                    <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                      <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
-                        >Aliases</span
-                      >
-                      <input
-                        class="mt-2 w-full bg-transparent text-lg font-semibold outline-none"
-                        [ngModel]="songAliases()"
-                        (ngModelChange)="updateSongField('aliases', $event)"
-                        placeholder="天晴, Sunny Day"
-                      />
-                    </label>
-                  </div>
-
-                  <label class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
-                    <span class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase"
-                      >Local Lyrics</span
-                    >
-                    <textarea
-                      class="mt-2 min-h-32 w-full resize-y bg-transparent text-base leading-7 font-medium outline-none"
-                      [ngModel]="songLocalLyrics()"
-                      (ngModelChange)="updateSongField('localLyrics', $event)"
-                      placeholder="Paste playable fallback lyrics here. Chinese songs require this field."
-                    ></textarea>
-                  </label>
-
-                  <div class="flex flex-wrap gap-3">
-                    <button
-                      class="action-button action-button--primary rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white"
-                      [disabled]="catalogSaving()"
-                      (click)="submitSong()"
-                    >
-                      {{ catalogSaving() ? 'Saving...' : 'Add Song' }}
-                    </button>
-                    <div
-                      class="rounded-full bg-slate-100 px-4 py-3 text-xs font-bold tracking-[0.2em] text-slate-500 uppercase"
-                    >
-                      {{ catalogSongs().length }} songs loaded
-                    </div>
-                  </div>
-
-                  <div
-                    class="catalog-panel__message rounded-3xl border border-slate-200 bg-slate-50/70 p-4 text-sm text-slate-600"
-                  >
-                    {{ catalogMessage() }}
-                  </div>
-
-                  @if (catalogError()) {
-                    <div
-                      class="catalog-panel__error rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700"
-                    >
-                      {{ catalogError() }}
-                    </div>
-                  }
-
-                  <div
-                    class="catalog-list rounded-[1.75rem] border border-slate-200 bg-slate-950/95 p-4 text-white"
-                  >
-                    <div class="flex items-center justify-between gap-3">
-                      <div class="text-xs font-semibold tracking-[0.25em] text-slate-400 uppercase">
-                        Playable songs
-                      </div>
-                      @if (catalogLoading()) {
-                        <div class="text-xs tracking-[0.25em] text-slate-500 uppercase">
-                          Loading
-                        </div>
-                      }
-                    </div>
-
-                    @if (catalogSongs().length) {
-                      <div class="mt-4 grid gap-3">
-                        @for (song of catalogSongs(); track trackSong($index, song)) {
-                          <article class="rounded-3xl border border-white/10 bg-white/5 p-4">
-                            <div class="flex flex-wrap items-center gap-2">
-                              <h3 class="text-lg font-black">{{ song.title }}</h3>
-                              <span
-                                class="rounded-full bg-white/10 px-3 py-1 text-[11px] font-bold tracking-[0.2em] text-sky-200 uppercase"
-                              >
-                                {{ song.language }}
-                              </span>
-                              @if (song.localLyrics) {
-                                <span
-                                  class="rounded-full bg-emerald-400/15 px-3 py-1 text-[11px] font-bold tracking-[0.2em] text-emerald-200 uppercase"
-                                >
-                                  local lyrics
-                                </span>
-                              }
-                            </div>
-                            <p class="mt-2 text-sm text-slate-300">{{ song.artist }}</p>
-                            @if (song.aliases?.length) {
-                              <p class="mt-3 text-xs tracking-[0.18em] text-slate-400 uppercase">
-                                Aliases: {{ song.aliases?.join(', ') }}
-                              </p>
-                            }
-                          </article>
-                        }
-                      </div>
-                    } @else {
-                      <p class="mt-4 text-sm text-slate-400">No songs are loaded yet.</p>
-                    }
-                  </div>
-                </div>
-              }
-            </section>
-          }
-        </div>
+        @if (activeView() === 'catalog') {
+          <app-catalog-view
+            [inRoom]="true"
+            [catalogOpen]="catalogOpen()"
+            [catalogLoading]="catalogLoading()"
+            [catalogSaving]="catalogSaving()"
+            [catalogMessage]="catalogMessage()"
+            [catalogError]="catalogError()"
+            [catalogSongs]="catalogSongs()"
+            [songTitle]="songTitle()"
+            [songArtist]="songArtist()"
+            [songLanguage]="songLanguage()"
+            [songAliases]="songAliases()"
+            [songLocalLyrics]="songLocalLyrics()"
+            (toggleCatalog)="toggleCatalog()"
+            (songFieldChange)="updateSongField($event.field, $event.value)"
+            (submitSong)="submitSong()"
+          />
+        }
       }
 
       <div

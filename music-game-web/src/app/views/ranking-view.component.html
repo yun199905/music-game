@@ -1,0 +1,79 @@
+@if (!room) {
+  <section
+    class="ranking-board scene-panel mt-6 rounded-[2rem] border border-slate-200 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)]"
+  >
+    <div class="ranking-board__header flex items-center justify-between">
+      <div>
+        <p class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase">Leaderboard</p>
+        <h2 class="mt-2 text-2xl font-black">Live room ranking</h2>
+      </div>
+    </div>
+
+    <div class="ranking-board__empty mt-5">
+      <div class="ranking-board__empty-card">
+        <span class="ranking-board__empty-label">No active room</span>
+        <strong>Create or join a room first to populate the live leaderboard.</strong>
+      </div>
+    </div>
+  </section>
+} @else {
+  <section
+    class="ranking-board scene-panel rounded-[2rem] border border-slate-200 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)]"
+  >
+    <div class="ranking-board__header flex items-center justify-between">
+      <div>
+        <p class="text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase">Leaderboard</p>
+        <h2 class="mt-2 text-2xl font-black">Live room ranking</h2>
+      </div>
+      @if (currentPlayer; as me) {
+        <div class="rounded-full bg-slate-950 px-3 py-2 text-xs font-bold text-white">
+          You: {{ me.score }}
+        </div>
+      }
+    </div>
+
+    @if (room.players.length) {
+      <div class="ranking-board__list mt-4 space-y-3">
+        @for (player of room.players; track player.id) {
+          <div
+            class="ranking-row-card flex items-center gap-3 rounded-3xl border border-slate-100 bg-slate-50 p-4"
+          >
+            <div class="ranking-row-card__position">
+              {{ $index + 1 }}
+            </div>
+            <div
+              class="ranking-row-card__avatar flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-300 text-lg font-black text-slate-950"
+            >
+              {{ player.nickname.slice(0, 1).toUpperCase() }}
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="truncate text-base font-black text-slate-900">
+                {{ player.nickname }}
+                @if (player.isHost) {
+                  <span
+                    class="ml-2 rounded-full bg-slate-900 px-2 py-1 text-[10px] tracking-[0.2em] text-white uppercase"
+                  >
+                    Host
+                  </span>
+                }
+              </div>
+              <div
+                class="text-xs tracking-[0.25em] uppercase"
+                [class.text-emerald-600]="player.connected"
+                [class.text-slate-400]="!player.connected"
+              >
+                {{ player.connected ? 'Online' : 'Offline' }}
+              </div>
+            </div>
+            <div class="ranking-row-card__score text-right">
+              <div class="text-xs tracking-[0.25em] text-slate-400 uppercase">Score</div>
+              <div class="text-2xl font-black text-slate-950">{{ player.score }}</div>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <p class="mt-4 text-sm text-slate-500">Players will appear here after joining a room.</p>
+    }
+  </section>
+}
