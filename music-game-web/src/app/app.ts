@@ -11,6 +11,7 @@ import {
   RoomSnapshot,
   RoundSnapshot,
   SongCatalogItem,
+  UpdateSongRequest,
 } from './core/game.models';
 import { CatalogViewComponent } from './views/catalog-view.component';
 import { GameplayViewComponent } from './views/gameplay-view.component';
@@ -58,6 +59,7 @@ export class App {
   protected readonly catalogMessage = signal('Catalog tools are ready for quick song maintenance.');
   protected readonly catalogError = signal('');
   protected readonly catalogSongs = signal<SongCatalogItem[]>([]);
+  protected readonly editingSongId = signal<string | null>(null);
   protected readonly songTitle = signal('');
   protected readonly songArtist = signal('');
   protected readonly songLanguage = signal<'zh-TW' | 'zh-CN' | 'en'>('en');
@@ -68,6 +70,9 @@ export class App {
   protected readonly currentRound = computed(() => this.room()?.currentRound);
   protected readonly connectedPlayers = computed(() =>
     (this.room()?.players ?? []).filter((player) => player.connected),
+  );
+  protected readonly enabledCatalogSongCount = computed(
+    () => this.catalogSongs().filter((song) => song.enabled).length,
   );
   protected readonly canStart = computed(
     () => this.isHost() && this.connectedPlayers().length >= 2,
@@ -379,7 +384,7 @@ export class App {
       return;
     }
 
-    const payload: CreateSongRequest = {
+    const payload = {
       title,
       artist,
       language,
@@ -393,18 +398,68 @@ export class App {
     try {
       this.catalogSaving.set(true);
       this.catalogError.set('');
-      const song = await this.api.createSong(payload);
+      const editingSongId = this.editingSongId();
+      const song = editingSongId
+        ? await this.api.updateSong(editingSongId, payload as UpdateSongRequest)
+        : await this.api.createSong(payload as CreateSongRequest);
       this.catalogSongs.update((songs) =>
-        [...songs, song].sort(
-          (left, right) =>
-            left.artist.localeCompare(right.artist) || left.title.localeCompare(right.title),
+        this.sortSongs(
+          editingSongId
+            ? songs.map((entry) => (entry.id === song.id ? song : entry))
+            : [...songs, song],
         ),
       );
-      this.songTitle.set('');
-      this.songArtist.set('');
-      this.songAliases.set('');
-      this.songLocalLyrics.set('');
-      this.catalogMessage.set(`Saved ${song.title} by ${song.artist} to the playable catalog.`);
+      this.resetSongForm();
+      this.catalogMessage.set(
+        editingSongId
+          ? `Updated ${song.title} by ${song.artist}.`
+          : `Saved ${song.title} by ${song.artist} to the playable catalog.`,
+      );
+    } catch (error) {
+      this.catalogError.set((error as Error).message);
+    } finally {
+      this.catalogSaving.set(false);
+    }
+  }
+
+  protected startSongEdit(songId: string) {
+    const song = this.catalogSongs().find((entry) => entry.id === songId);
+    if (!song) {
+      return;
+    }
+
+    this.editingSongId.set(song.id);
+    this.songTitle.set(song.title);
+    this.songArtist.set(song.artist);
+    this.songLanguage.set(song.language);
+    this.songAliases.set(song.aliases?.join(', ') ?? '');
+    this.songLocalLyrics.set(song.localLyrics ?? '');
+    this.catalogError.set('');
+    this.catalogMessage.set(`Editing ${song.title} by ${song.artist}.`);
+  }
+
+  protected cancelSongEdit() {
+    this.resetSongForm();
+    this.catalogError.set('');
+    this.catalogMessage.set('Edit cancelled. Catalog tools are ready for quick song maintenance.');
+  }
+
+  protected async setSongEnabled(songId: string, enabled: boolean) {
+    try {
+      this.catalogSaving.set(true);
+      this.catalogError.set('');
+      const song = await this.api.updateSong(songId, { enabled });
+      this.catalogSongs.update((songs) =>
+        this.sortSongs(songs.map((entry) => (entry.id === song.id ? song : entry))),
+      );
+      if (this.editingSongId() === song.id && !enabled) {
+        this.resetSongForm();
+      }
+      this.catalogMessage.set(
+        enabled
+          ? `Re-enabled ${song.title} by ${song.artist}.`
+          : `Disabled ${song.title} by ${song.artist} from the playable catalog.`,
+      );
     } catch (error) {
       this.catalogError.set((error as Error).message);
     } finally {
@@ -477,13 +532,31 @@ export class App {
     try {
       this.catalogLoading.set(true);
       this.catalogError.set('');
-      const songs = await this.api.listSongs();
-      this.catalogSongs.set(songs);
+      const songs = await this.api.listManageableSongs();
+      this.catalogSongs.set(this.sortSongs(songs));
     } catch (error) {
       this.catalogError.set((error as Error).message);
     } finally {
       this.catalogLoading.set(false);
     }
+  }
+
+  private resetSongForm() {
+    this.editingSongId.set(null);
+    this.songTitle.set('');
+    this.songArtist.set('');
+    this.songLanguage.set('en');
+    this.songAliases.set('');
+    this.songLocalLyrics.set('');
+  }
+
+  private sortSongs(songs: SongCatalogItem[]) {
+    return [...songs].sort(
+      (left, right) =>
+        Number(right.enabled) - Number(left.enabled) ||
+        left.artist.localeCompare(right.artist) ||
+        left.title.localeCompare(right.title),
+    );
   }
 
   private syncCountdown(round?: RoundSnapshot) {

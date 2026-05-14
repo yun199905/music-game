@@ -9,6 +9,7 @@ import {
 import { CreateRoomDto } from './dto/create-room.dto';
 import { CreateSongDto } from './dto/create-song.dto';
 import { JoinRoomDto } from './dto/join-room.dto';
+import { UpdateSongDto } from './dto/update-song.dto';
 import { MaskingService } from './masking.service';
 import { PersistenceService } from './persistence.service';
 import { LyricsService } from './lyrics.service';
@@ -67,8 +68,16 @@ export class GameService implements OnModuleInit, OnModuleDestroy {
     return this.persistenceService.getSongs();
   }
 
+  async listManageableSongs() {
+    return this.persistenceService.getManageableSongs();
+  }
+
   async addSong(dto: CreateSongDto) {
     return this.persistenceService.addSong(dto);
+  }
+
+  async updateSong(id: string, dto: UpdateSongDto) {
+    return this.persistenceService.updateSong(id, dto);
   }
 
   async createRoom(dto: CreateRoomDto) {

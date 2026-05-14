@@ -17,6 +17,8 @@ export class CatalogViewComponent {
   @Input() catalogMessage = '';
   @Input() catalogError = '';
   @Input() catalogSongs: SongCatalogItem[] = [];
+  @Input() enabledSongCount = 0;
+  @Input() editingSongId: string | null = null;
   @Input() songTitle = '';
   @Input() songArtist = '';
   @Input() songLanguage: 'zh-TW' | 'zh-CN' | 'en' = 'en';
@@ -29,4 +31,7 @@ export class CatalogViewComponent {
     value: string;
   }>();
   @Output() submitSong = new EventEmitter<void>();
+  @Output() editSong = new EventEmitter<string>();
+  @Output() cancelEdit = new EventEmitter<void>();
+  @Output() toggleSongEnabled = new EventEmitter<{ songId: string; enabled: boolean }>();
 }

@@ -28,8 +28,8 @@
   </div>
 
   <p class="mt-3 text-sm leading-6 text-slate-600">
-    Add playable songs without changing code. Chinese songs should include local lyrics so rounds
-    stay stable even when the external provider cannot resolve them.
+    Add, edit, and disable songs without changing code. Chinese songs should include local lyrics
+    so rounds stay stable even when the external provider cannot resolve them.
   </p>
 
   @if (catalogOpen) {
@@ -42,7 +42,7 @@
           </div>
           <div class="catalog-panel__summary-card">
             <span class="catalog-panel__summary-label">Current load</span>
-            <strong>{{ catalogSongs.length }} songs ready in the catalog</strong>
+            <strong>{{ enabledSongCount }} playable songs ready</strong>
           </div>
         </div>
       }
@@ -120,8 +120,19 @@
           [disabled]="catalogSaving"
           (click)="submitSong.emit()"
         >
-          {{ catalogSaving ? 'Saving...' : 'Add Song' }}
+          {{
+            catalogSaving ? 'Saving...' : editingSongId ? 'Save Changes' : 'Add Song'
+          }}
         </button>
+        @if (editingSongId) {
+          <button
+            class="action-button action-button--secondary rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-900"
+            [disabled]="catalogSaving"
+            (click)="cancelEdit.emit()"
+          >
+            Cancel Edit
+          </button>
+        }
         <div
           class="rounded-full bg-slate-100 px-4 py-3 text-xs font-bold tracking-[0.2em] text-slate-500 uppercase"
         >
@@ -166,6 +177,16 @@
                   >
                     {{ song.language }}
                   </span>
+                  <span
+                    class="rounded-full px-3 py-1 text-[11px] font-bold tracking-[0.2em] uppercase"
+                    [ngClass]="
+                      song.enabled
+                        ? 'bg-emerald-400/15 text-emerald-200'
+                        : 'bg-rose-400/15 text-rose-200'
+                    "
+                  >
+                    {{ song.enabled ? 'enabled' : 'disabled' }}
+                  </span>
                   @if (song.localLyrics) {
                     <span
                       class="rounded-full bg-emerald-400/15 px-3 py-1 text-[11px] font-bold tracking-[0.2em] text-emerald-200 uppercase"
@@ -180,6 +201,27 @@
                     Aliases: {{ song.aliases?.join(', ') }}
                   </p>
                 }
+                <div class="mt-4 flex flex-wrap gap-2">
+                  <button
+                    class="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-bold tracking-[0.18em] text-white uppercase"
+                    [disabled]="catalogSaving"
+                    (click)="editSong.emit(song.id)"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    class="rounded-full border px-4 py-2 text-xs font-bold tracking-[0.18em] uppercase"
+                    [ngClass]="
+                      song.enabled
+                        ? 'border-rose-200/30 bg-rose-400/10 text-rose-100'
+                        : 'border-emerald-200/30 bg-emerald-400/10 text-emerald-100'
+                    "
+                    [disabled]="catalogSaving"
+                    (click)="toggleSongEnabled.emit({ songId: song.id, enabled: !song.enabled })"
+                  >
+                    {{ song.enabled ? 'Disable' : 'Enable' }}
+                  </button>
+                </div>
               </article>
             }
           </div>

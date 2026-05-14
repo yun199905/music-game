@@ -56,3 +56,12 @@ export interface CreateSongRequest {
   aliases?: string[];
   localLyrics?: string;
 }
+
+export interface UpdateSongRequest {
+  title?: string;
+  artist?: string;
+  language?: 'zh-TW' | 'zh-CN' | 'en';
+  aliases?: string[];
+  localLyrics?: string;
+  enabled?: boolean;
+}
