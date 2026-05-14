@@ -24,4 +24,36 @@ describe('CatalogViewComponent', () => {
 
     expect(spy).toHaveBeenCalledTimes(1);
   });
+
+  it('emits editSong from the catalog list action button', async () => {
+    const fixture = await TestBed.configureTestingModule({
+      imports: [CatalogViewComponent],
+    }).createComponent(CatalogViewComponent);
+
+    fixture.componentRef.setInput('catalogOpen', true);
+    fixture.componentRef.setInput('catalogSongs', [
+      {
+        id: 'song-1',
+        title: 'Believer',
+        artist: 'Imagine Dragons',
+        language: 'en',
+        enabled: true,
+      },
+    ]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const component = fixture.componentInstance;
+    const spy = vi.fn();
+    component.editSong.subscribe(spy);
+
+    const buttons = Array.from(
+      fixture.nativeElement.querySelectorAll('button'),
+    ) as HTMLButtonElement[];
+    const button = buttons.find((element) => element.textContent?.includes('Edit'))!;
+
+    button.click();
+
+    expect(spy).toHaveBeenCalledWith('song-1');
+  });
 });

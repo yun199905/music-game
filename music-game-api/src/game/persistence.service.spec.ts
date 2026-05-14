@@ -1,5 +1,6 @@
 import { Repository } from 'typeorm';
 import { PersistenceService } from './persistence.service';
+import { SongEntity } from './entities/song.entity';
 import { RoomState } from './game.types';
 
 type MockRepository<T> = Partial<Record<keyof Repository<T>, jest.Mock>>;
@@ -83,6 +84,62 @@ describe('PersistenceService', () => {
     expect(savedSong.artist).toBe('周杰倫');
     expect(savedSong.aliases).toEqual(['天晴', '晴天']);
     expect(savedSong.localLyrics).toBe('窗外的麻雀在電線桿上多嘴。');
+  });
+
+  it('rejects duplicate songs based on normalized artist and title', async () => {
+    const service = new PersistenceService();
+
+    await service.addSong({
+      title: '晴天',
+      artist: '周杰倫',
+      language: 'zh-TW',
+      localLyrics: '窗外的麻雀在電線桿上多嘴。',
+    });
+
+    await expect(
+      service.addSong({
+        title: ' 晴 天 ',
+        artist: ' 周杰倫 ',
+        language: 'zh-TW',
+        localLyrics: '副本歌詞',
+      }),
+    ).rejects.toThrow('Song title and artist must be unique.');
+  });
+
+  it('updates and disables an existing custom song without removing it from management', async () => {
+    const service = new PersistenceService();
+    const created = await service.addSong({
+      title: 'Believer',
+      artist: 'Imagine Dragons',
+      language: 'en',
+    });
+
+    const updated = await service.updateSong(created.id, {
+      title: 'Believer (Live)',
+      aliases: ['believer live', ' live '],
+      enabled: false,
+    });
+
+    expect(updated.title).toBe('Believer (Live)');
+    expect(updated.artist).toBe('Imagine Dragons');
+    expect(updated.aliases).toEqual(['believer live', 'live']);
+    expect(updated.enabled).toBe(false);
+    await expect(service.getSongs()).resolves.not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: created.id,
+        }),
+      ]),
+    );
+    await expect(service.getManageableSongs()).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: created.id,
+          title: 'Believer (Live)',
+          enabled: false,
+        }),
+      ]),
+    );
   });
 
   it('backfills local lyrics for existing seed songs in the database', async () => {

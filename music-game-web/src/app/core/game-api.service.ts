@@ -5,6 +5,7 @@ import {
   RoomSessionResponse,
   RoomSnapshot,
   SongCatalogItem,
+  UpdateSongRequest,
 } from './game.models';
 
 @Injectable({ providedIn: 'root' })
@@ -31,8 +32,16 @@ export class GameApiService {
     return this.get<SongCatalogItem[]>('/songs');
   }
 
+  async listManageableSongs(): Promise<SongCatalogItem[]> {
+    return this.get<SongCatalogItem[]>('/songs/manage');
+  }
+
   async createSong(payload: CreateSongRequest): Promise<SongCatalogItem> {
     return this.post<SongCatalogItem>('/songs', payload);
+  }
+
+  async updateSong(songId: string, payload: UpdateSongRequest): Promise<SongCatalogItem> {
+    return this.patch<SongCatalogItem>(`/songs/${songId}`, payload);
   }
 
   private async post<T>(path: string, payload: unknown): Promise<T> {
@@ -54,6 +63,23 @@ export class GameApiService {
 
   private async get<T>(path: string): Promise<T> {
     const response = await fetch(`${this.baseUrl}${path}`);
+
+    if (!response.ok) {
+      const errorBody = (await response.json().catch(() => null)) as { message?: string } | null;
+      throw new Error(errorBody?.message ?? 'Request failed');
+    }
+
+    return (await response.json()) as T;
+  }
+
+  private async patch<T>(path: string, payload: unknown): Promise<T> {
+    const response = await fetch(`${this.baseUrl}${path}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
 
     if (!response.ok) {
       const errorBody = (await response.json().catch(() => null)) as { message?: string } | null;

@@ -1,7 +1,8 @@
-import { Injectable, Optional } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateSongDto } from './dto/create-song.dto';
+import { UpdateSongDto } from './dto/update-song.dto';
 import { GamePlayerEntity } from './entities/game-player.entity';
 import { GameRoomEntity } from './entities/game-room.entity';
 import { GameRoundEntity } from './entities/game-round.entity';
@@ -102,15 +103,50 @@ export class PersistenceService {
   }
 
   async getSongs(): Promise<SongEntity[]> {
+    const songs = await this.getAllSongs();
+
+    return songs.filter((song) => song.enabled);
+  }
+
+  async getManageableSongs(): Promise<SongEntity[]> {
+    return this.getAllSongs();
+  }
+
+  async addSong(dto: CreateSongDto): Promise<SongEntity> {
+    await this.ensureUniqueSong(dto.title, dto.artist);
+    const song = this.mapSongInputToEntity(dto);
+    return this.saveSong(song);
+  }
+
+  async updateSong(id: string, dto: UpdateSongDto): Promise<SongEntity> {
+    const existing = await this.getSongById(id);
+    const nextSong = this.mapSongInputToEntity(
+      {
+        title: dto.title ?? existing.title,
+        artist: dto.artist ?? existing.artist,
+        language: dto.language ?? existing.language,
+        aliases: dto.aliases ?? existing.aliases ?? [],
+        localLyrics:
+          dto.localLyrics === undefined
+            ? (existing.localLyrics ?? undefined)
+            : dto.localLyrics,
+      },
+      existing,
+    );
+
+    nextSong.enabled = dto.enabled ?? existing.enabled;
+    await this.ensureUniqueSong(nextSong.title, nextSong.artist, existing.id);
+    return this.saveSong(nextSong);
+  }
+
+  private async getAllSongs(): Promise<SongEntity[]> {
     if (this.songRepository) {
       return this.songRepository.find({
-        where: { enabled: true },
         order: { artist: 'ASC', title: 'ASC' },
       });
     }
 
     return [...this.memorySongs.values()]
-      .filter((song) => song.enabled)
       .sort(
         (left, right) =>
           left.artist.localeCompare(right.artist) ||
@@ -118,10 +154,29 @@ export class PersistenceService {
       );
   }
 
-  async addSong(dto: CreateSongDto): Promise<SongEntity> {
-    const song = this.mapSeedToEntity(dto);
+  private async getSongById(id: string): Promise<SongEntity> {
     if (this.songRepository) {
-      return this.songRepository.save(song);
+      const song = await this.songRepository.findOne({ where: { id } });
+      if (!song) {
+        throw new NotFoundException('Song not found.');
+      }
+
+      return song;
+    }
+
+    const song = this.memorySongs.get(id);
+    if (!song) {
+      throw new NotFoundException('Song not found.');
+    }
+
+    return song;
+  }
+
+  private async saveSong(song: SongEntity): Promise<SongEntity> {
+    if (this.songRepository) {
+      const savedSong = await this.songRepository.save(song);
+      this.memorySongs.set(savedSong.id, savedSong);
+      return savedSong;
     }
 
     this.memorySongs.set(song.id, song);
@@ -249,33 +304,61 @@ export class PersistenceService {
     });
   }
 
-  private mapSeedToEntity(song: SeedSong | CreateSongDto): SongEntity {
+  private mapSeedToEntity(song: SeedSong): SongEntity {
+    return this.mapSongInputToEntity(
+      {
+        title: song.title,
+        artist: song.artist,
+        language: song.language,
+        aliases: song.aliases ?? [],
+        localLyrics: song.fallbackLyrics,
+      },
+      {
+        id: crypto.randomUUID(),
+        enabled: true,
+      } as SongEntity,
+    );
+  }
+
+  private mapSongInputToEntity(
+    song: CreateSongDto | UpdateSongDto,
+    existing?: SongEntity,
+  ): SongEntity {
     const aliases = (song.aliases ?? [])
       .map((alias) => alias.trim())
       .filter(Boolean);
     const uniqueAliases = [...new Set(aliases)];
-    const localLyricsSource = this.getLocalLyrics(song);
 
     return {
-      id: crypto.randomUUID(),
+      id: existing?.id ?? crypto.randomUUID(),
       title: song.title.trim(),
       artist: song.artist.trim(),
       language: song.language,
       aliases: uniqueAliases,
-      enabled: true,
-      localLyrics: localLyricsSource?.trim() || null,
+      enabled: existing?.enabled ?? true,
+      localLyrics: song.localLyrics?.trim() || null,
     };
   }
 
-  private getLocalLyrics(song: SeedSong | CreateSongDto): string | undefined {
-    if (this.isSeedSong(song)) {
-      return song.fallbackLyrics;
-    }
+  private async ensureUniqueSong(title: string, artist: string, ignoreId?: string) {
+    const duplicate = (await this.getAllSongs()).find((song) => {
+      if (song.id === ignoreId) {
+        return false;
+      }
 
-    return song.localLyrics;
+      return this.songIdentity(song.title, song.artist) === this.songIdentity(title, artist);
+    });
+
+    if (duplicate) {
+      throw new BadRequestException('Song title and artist must be unique.');
+    }
   }
 
-  private isSeedSong(song: SeedSong | CreateSongDto): song is SeedSong {
-    return 'fallbackLyrics' in song;
+  private songIdentity(title: string, artist: string) {
+    return `${this.normalizeSongIdentityPart(artist)}::${this.normalizeSongIdentityPart(title)}`;
+  }
+
+  private normalizeSongIdentityPart(value: string) {
+    return value.normalize('NFKC').replace(/\s+/g, '').toLowerCase();
   }
 }

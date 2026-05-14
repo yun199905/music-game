@@ -32,7 +32,9 @@ describe('App', () => {
     joinRoom: ReturnType<typeof vi.fn>;
     getRoom: ReturnType<typeof vi.fn>;
     listSongs: ReturnType<typeof vi.fn>;
+    listManageableSongs: ReturnType<typeof vi.fn>;
     createSong: ReturnType<typeof vi.fn>;
+    updateSong: ReturnType<typeof vi.fn>;
   };
   let socketMock: {
     connect: ReturnType<typeof vi.fn>;
@@ -57,7 +59,9 @@ describe('App', () => {
       joinRoom: vi.fn(),
       getRoom: vi.fn().mockResolvedValue(roomSnapshot),
       listSongs: vi.fn().mockResolvedValue(emptyCatalog),
+      listManageableSongs: vi.fn().mockResolvedValue(emptyCatalog),
       createSong: vi.fn(),
+      updateSong: vi.fn(),
     };
     socketMock = {
       connect: vi.fn().mockResolvedValue(roomSnapshot),
@@ -292,5 +296,112 @@ describe('App', () => {
     expect(app.room()).toBeNull();
     expect(app.playerId()).toBeNull();
     expect(app.notice()).toContain('Saved session is no longer valid.');
+  });
+
+  it('loads manageable catalog songs instead of only playable songs', async () => {
+    apiMock.listManageableSongs.mockResolvedValue([
+      {
+        id: 'song-2',
+        title: 'Disabled Song',
+        artist: 'Artist B',
+        language: 'en',
+        enabled: false,
+      },
+      {
+        id: 'song-1',
+        title: 'Enabled Song',
+        artist: 'Artist A',
+        language: 'en',
+        enabled: true,
+      },
+    ]);
+
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance as unknown as {
+      catalogSongs: () => SongCatalogItem[];
+    };
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(apiMock.listManageableSongs).toHaveBeenCalledTimes(1);
+    expect(app.catalogSongs().map((song) => song.id)).toEqual(['song-1', 'song-2']);
+  });
+
+  it('updates an existing song when submitting while editing', async () => {
+    const catalogSong: SongCatalogItem = {
+      id: 'song-1',
+      title: 'Old Song',
+      artist: 'Artist A',
+      language: 'en',
+      enabled: true,
+      aliases: ['old alias'],
+      localLyrics: null,
+    };
+    apiMock.listManageableSongs.mockResolvedValue([catalogSong]);
+    apiMock.updateSong.mockResolvedValue({
+      ...catalogSong,
+      title: 'New Song',
+      aliases: ['fresh alias'],
+    });
+
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance as unknown as {
+      startSongEdit: (songId: string) => void;
+      updateSongField: (
+        field: 'title' | 'artist' | 'language' | 'aliases' | 'localLyrics',
+        value: string,
+      ) => void;
+      submitSong: () => Promise<void>;
+      catalogSongs: () => SongCatalogItem[];
+      editingSongId: () => string | null;
+    };
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    app.startSongEdit('song-1');
+    app.updateSongField('title', 'New Song');
+    app.updateSongField('aliases', 'fresh alias');
+    await app.submitSong();
+
+    expect(apiMock.updateSong).toHaveBeenCalledWith('song-1', {
+      title: 'New Song',
+      artist: 'Artist A',
+      language: 'en',
+      aliases: ['fresh alias'],
+      localLyrics: undefined,
+    });
+    expect(app.catalogSongs()[0].title).toBe('New Song');
+    expect(app.editingSongId()).toBeNull();
+  });
+
+  it('disables a song from the catalog list', async () => {
+    const catalogSong: SongCatalogItem = {
+      id: 'song-1',
+      title: 'Song A',
+      artist: 'Artist A',
+      language: 'en',
+      enabled: true,
+      localLyrics: null,
+    };
+    apiMock.listManageableSongs.mockResolvedValue([catalogSong]);
+    apiMock.updateSong.mockResolvedValue({
+      ...catalogSong,
+      enabled: false,
+    });
+
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance as unknown as {
+      setSongEnabled: (songId: string, enabled: boolean) => Promise<void>;
+      catalogSongs: () => SongCatalogItem[];
+    };
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await app.setSongEnabled('song-1', false);
+
+    expect(apiMock.updateSong).toHaveBeenCalledWith('song-1', { enabled: false });
+    expect(app.catalogSongs()[0].enabled).toBe(false);
   });
 });

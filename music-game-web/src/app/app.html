@@ -118,6 +118,8 @@
           [catalogMessage]="catalogMessage()"
           [catalogError]="catalogError()"
           [catalogSongs]="catalogSongs()"
+          [enabledSongCount]="enabledCatalogSongCount()"
+          [editingSongId]="editingSongId()"
           [songTitle]="songTitle()"
           [songArtist]="songArtist()"
           [songLanguage]="songLanguage()"
@@ -126,6 +128,9 @@
           (toggleCatalog)="toggleCatalog()"
           (songFieldChange)="updateSongField($event.field, $event.value)"
           (submitSong)="submitSong()"
+          (editSong)="startSongEdit($event)"
+          (cancelEdit)="cancelSongEdit()"
+          (toggleSongEnabled)="setSongEnabled($event.songId, $event.enabled)"
         />
       }
 
@@ -169,6 +174,8 @@
             [catalogMessage]="catalogMessage()"
             [catalogError]="catalogError()"
             [catalogSongs]="catalogSongs()"
+            [enabledSongCount]="enabledCatalogSongCount()"
+            [editingSongId]="editingSongId()"
             [songTitle]="songTitle()"
             [songArtist]="songArtist()"
             [songLanguage]="songLanguage()"
@@ -177,6 +184,9 @@
             (toggleCatalog)="toggleCatalog()"
             (songFieldChange)="updateSongField($event.field, $event.value)"
             (submitSong)="submitSong()"
+            (editSong)="startSongEdit($event)"
+            (cancelEdit)="cancelSongEdit()"
+            (toggleSongEnabled)="setSongEnabled($event.songId, $event.enabled)"
           />
         }
       }
